@@ -8,8 +8,8 @@
 #########################################################################
 
 #RVCT 3.1 Root Directory
-#DIR_ARM  = D:/Project/Electrombile/SIMCOM/RVCT31_for_EAT
-DIR_ARM  = D:\Project\Electrombile\SIMCOM\RVCT31_for_EAT\RVCT_EAT
+DIR_ARM  = $(RVCT31)
+#DIR_ARM  = D:\Project\Electrombile\SIMCOM\RVCT31_for_EAT\RVCT_EAT
 #生成二进制文件名
 BIN = app
 
