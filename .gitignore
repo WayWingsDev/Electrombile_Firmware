@@ -30,3 +30,11 @@
 
 # Debug files
 *.dSYM/
+
+# eclipse project file
+.cproject
+.project
+
+# output files
+output/
+lnkfeedback.txt
