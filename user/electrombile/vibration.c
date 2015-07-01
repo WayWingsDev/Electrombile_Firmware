@@ -57,6 +57,8 @@ static eat_bool vibration_sendAlarm()
     u8 msgLen = sizeof(MSG) + sizeof(MSG_VIBRATE);
     MSG* msg = allocMsg(msgLen);
     //TODO:
+    MSG_VIBRATE* vibrate = (MSG_VIBRATE*)msg->data;
+    vibrate->isVibrate = EAT_TRUE;
 
     return vibration_sendMsg2Main(msg, msgLen);
 }
