@@ -1,7 +1,7 @@
 /*
  * setting.c
  *
- *  Created on: 2015Äê6ÔÂ24ÈÕ
+ *  Created on: 2015/6/24
  *      Author: jk
  */
 #include "setting.h"
@@ -14,7 +14,7 @@ static SETTING setting =
 };
 
 /*
- * ´ÓFLASHÖĞ¶ÁÈ¡ÉèÖÃ
+ * ä»FLASHä¸­è¯»å–è®¾ç½®
  */
 eat_bool SETTING_initial(void)
 {
@@ -22,7 +22,7 @@ eat_bool SETTING_initial(void)
 }
 
 /*
- * ±£´æÉèÖÃµ½FLASH
+ * ä¿å­˜è®¾ç½®åˆ°FLASH
  */
 eat_bool SETTING_save(void)
 {

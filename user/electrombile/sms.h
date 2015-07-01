@@ -1,7 +1,7 @@
 /*
  * sms.h
  *
- *  Created on: 2015Äê6ÔÂ24ÈÕ
+ *  Created on: 2015/6/24
  *      Author: jk
  */
 
@@ -9,6 +9,7 @@
 #define USER_ELECTROMBILE_SMS_H_
 
 
+void app_sms_thread(void *data);
 
 
 

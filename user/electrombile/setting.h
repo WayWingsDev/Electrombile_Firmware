@@ -1,7 +1,7 @@
 /*
  * setting.h
  *
- *  Created on: 2015Äê6ÔÂ24ÈÕ
+ *  Created on: 2015/6/24
  *      Author: jk
  */
 

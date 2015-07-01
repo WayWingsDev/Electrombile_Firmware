@@ -1,7 +1,7 @@
 /*
  * log.h
  *
- *  Created on: 2015Äê6ÔÂ25ÈÕ
+ *  Created on: 2015/6/25
  *      Author: jk
  */
 
@@ -15,6 +15,12 @@
 #define LOG_DEBUG(fmt, ...) eat_trace("[DBG][s]"fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(fmt, ...)
+#endif
+
+#ifdef _INFO
+#define LOG_INFO(fmt, ...) eat_trace("[INF][s]"fmt, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define LOG_INFO(fmt, ...)
 #endif
 
 #ifdef _ERROR

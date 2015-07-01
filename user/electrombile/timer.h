@@ -1,7 +1,7 @@
 /*
  * timer.h
  *
- *  Created on: 2015Äê6ÔÂ25ÈÕ
+ *  Created on: 2015/6/25
  *      Author: jk
  */
 
