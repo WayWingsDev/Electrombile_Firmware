@@ -8,7 +8,9 @@
 #include <eat_interface.h>
 #include <eat_gps.h>
 
+#include "gps.h"
 #include "timer.h"
+#include "thread.h"
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
@@ -27,7 +29,7 @@ void app_gps_thread(void *data)
 
     while(EAT_TRUE)
     {
-        eat_get_event_for_user(EAT_USER_1, &event);
+        eat_get_event_for_user(THREAD_GPS, &event);
         switch(event.event)
         {
             case EAT_EVENT_TIMER :
