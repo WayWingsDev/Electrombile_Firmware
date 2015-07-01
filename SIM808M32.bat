@@ -5,3 +5,4 @@ set path=%CD%\build\winmake;
 
 rem make -f build\Makefile --debug=b PROJ=%~n0 CFG=user %1
 make -f build\Makefile PROJ=%~n0 CFG=user %1
+@pause
