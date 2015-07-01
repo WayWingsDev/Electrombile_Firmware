@@ -5,6 +5,7 @@
 #include "vibration.h"
 #include "thread.h"
 #include "log.h"
+#include "msg.h"
 
 
 void app_vibration_thread(void *data)
@@ -44,4 +45,18 @@ void app_vibration_thread(void *data)
 
         }
     }
+}
+
+static eat_bool vibration_sendMsg2Main(MSG* msg, u8 len)
+{
+    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
+}
+
+static eat_bool vibration_sendAlarm()
+{
+    u8 msgLen = sizeof(MSG) + sizeof(MSG_VIBRATE);
+    MSG* msg = allocMsg(msgLen);
+    //TODO:
+
+    return vibration_sendMsg2Main(msg, msgLen);
 }

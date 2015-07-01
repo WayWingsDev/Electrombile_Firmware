@@ -23,9 +23,15 @@ typedef struct
     u8 data[];
 }MSG;
 
+typedef struct
+{
+    eat_bool isVibrate;
+}MSG_VIBRATE;
 
 #pragma pack(pop)
 
-eat_bool sendMsg(EatUser_enum from, EatUser_enum to, u8* msg, u8 len);
+MSG* allocMsg(u8 len);
+void freeMsg(MSG* msg);
+eat_bool sendMsg(EatUser_enum from, EatUser_enum to, void* msg, u8 len);
 
 #endif //ELECTROMBILE_FIRMWARE_MSG_H
