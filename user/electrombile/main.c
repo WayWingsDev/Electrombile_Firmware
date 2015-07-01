@@ -20,6 +20,7 @@
 #include "timer.h"
 #include "setting.h"
 #include "log.h"
+#include "version.h"
 
 /********************************************************************
  * Macros
@@ -120,7 +121,7 @@ void app_main(void *data)
     APP_InitRegions();//Init app RAM
     APP_init_clib(); //C library initialize, second step
 
-    eat_trace(" app_main ENTRY");
+    LOG_DEBUG(" app_main ENTRY: version:%s", VERSION_STR);
     rc = eat_mem_init(s_memPool,EAT_MEM_MAX_SIZE);
     if (!rc)
     {
