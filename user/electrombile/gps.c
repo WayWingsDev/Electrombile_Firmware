@@ -11,6 +11,7 @@
 #include "gps.h"
 #include "timer.h"
 #include "thread.h"
+#include "msg.h"
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
@@ -94,4 +95,21 @@ static void gps_timer_handler()
     eat_trace("EAT_NMEA_OUTPUT_GPZDA=%s", gps_info_buf);
 }
 
+static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
+{
+    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
+}
+
+static eat_bool gps_sendGPS()
+{
+    u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
+    MSG* msg = allocMsg(msgLen);
+    
+    //TODO:
+    MSG_GPS* gps = (MSG_GPS*)msg->data;
+    gps->latitude = 31.1334;
+    gps->longitude = 21.2126;
+
+    return gps_sendMsg2Main(msg, msgLen);
+}
 

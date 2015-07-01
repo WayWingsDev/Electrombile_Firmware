@@ -25,6 +25,11 @@ typedef struct
 
 typedef struct
 {
+    double longitude;
+    double latitude;
+}MSG_GPS;
+typedef struct
+{
     eat_bool isVibrate;
 }MSG_VIBRATE;
 
