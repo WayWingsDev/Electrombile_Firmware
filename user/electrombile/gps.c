@@ -93,3 +93,5 @@ static void gps_timer_handler()
     eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPZDA, gps_info_buf,NMEA_BUFF_SIZE);
     eat_trace("EAT_NMEA_OUTPUT_GPZDA=%s", gps_info_buf);
 }
+
+

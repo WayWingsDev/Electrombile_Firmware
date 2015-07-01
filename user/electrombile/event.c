@@ -21,15 +21,17 @@ typedef struct
  * local event function definition
  */
 int event_timer(const EatEvent_st* event);
+int event_threadMsg(const EatEvent_st* event);
 
 
 static EVENT_PROC msgProcs[] =
 {
 		{EAT_EVENT_TIMER,				event_timer},
-		{EAT_EVENT_MDM_READY_RD,		EAT_NULL},
-		{EAT_EVENT_MDM_READY_WR,		EAT_NULL},
-		{EAT_EVENT_UART_READY_RD, 		EAT_NULL},
+		{EAT_EVENT_MDM_READY_RD,        EAT_NULL},
+		{EAT_EVENT_MDM_READY_WR,        EAT_NULL},
+		{EAT_EVENT_UART_READY_RD,       EAT_NULL},
 		{EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
+		{EAT_EVENT_USER_MSG,            event_threadMsg},
 };
 
 
@@ -70,5 +72,10 @@ int event_timer(const EatEvent_st* event)
 			break;
 	}
 	return 0;
+}
+
+int event_threadMsg(const EatEvent_st* event)
+{
+
 }
 

@@ -1,19 +1,17 @@
-/*
- * sms.c
- *
- *  Created on: 2015/6/24
- *      Author: jk
- */
+//
+// Created by jk on 2015/7/1.
+//
 
-#include "sms.h"
-#include "log.h"
+#include "vibration.h"
 #include "thread.h"
+#include "log.h"
 
-void app_sms_thread(void *data)
+
+void app_vibration_thread(void *data)
 {
     EatEvent_st event;
 
-    LOG_DEBUG("SMS thread start");
+    LOG_DEBUG("Vibration thread start");
 
     while(EAT_TRUE)
     {
@@ -26,7 +24,7 @@ void app_sms_thread(void *data)
                 {
 
                     default:
-                    	LOG_ERROR("ERR: timer[%d] expire!");
+                        LOG_ERROR("ERR: timer[%d] expire!");
 
                         break;
                 }
