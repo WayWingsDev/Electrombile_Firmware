@@ -12,6 +12,8 @@
 #include "timer.h"
 #include "thread.h"
 #include "msg.h"
+#include<string.h>
+#include <stdlib.h>
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
@@ -70,29 +72,29 @@ void app_gps_thread(void *data)
 
 static void gps_timer_handler()
 {
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_SIMCOM, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_SIMCOM=%s", gps_info_buf);
+	char * GPSIM_data[9];
+	char *buffer;
+	double lat,lon;
+	char gps_fix;
+	int i;
+	eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
+	eat_trace("EAT_NMEA_OUTPUT_SIMCOM=%s", gps_info_buf);
 
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPGGA=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGLL, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPGLL=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGSA, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPGSA=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGSV, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPGSV=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPRMC, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPRMC=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPVTG, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPVTG=%s", gps_info_buf);
-
-    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPZDA, gps_info_buf,NMEA_BUFF_SIZE);
-    eat_trace("EAT_NMEA_OUTPUT_GPZDA=%s", gps_info_buf);
+	buffer = gps_info_buf;
+	for(i=0;i<7;i++)
+	{
+		GPSIM_data[i] = strtok(buffer,",");
+		buffer = NULL;		
+	}
+	lat = atof(GPSIM_data[2]);
+	lon =  atof(GPSIM_data[4]);
+	gps_fix = atoi(GPSIM_data[6]);
+	if(!gps_fix)
+		return;
+	
+	gps_sendGPS(lat,lon);
+	eat_trace("%s,%s,%s,%s,%s,%s,%s",GPSIM_data[0],GPSIM_data[1],GPSIM_data[2],GPSIM_data[3],GPSIM_data[4],GPSIM_data[5],GPSIM_data[6]);
+	eat_trace("lat=%f,lon=%f,fix=%d",lat,lon,gps_fix);
 }
 
 static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
@@ -100,15 +102,15 @@ static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
 }
 
-static eat_bool gps_sendGPS()
+static eat_bool gps_sendGPS(double lat,double lon)
 {
     u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
     MSG* msg = allocMsg(msgLen);
     
     //TODO:
     MSG_GPS* gps = (MSG_GPS*)msg->data;
-    gps->latitude = 31.1334;
-    gps->longitude = 21.2126;
+    gps->latitude = lat;
+    gps->longitude = lon;
 
     return gps_sendMsg2Main(msg, msgLen);
 }
