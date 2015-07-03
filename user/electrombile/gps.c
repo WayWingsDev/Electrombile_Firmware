@@ -109,11 +109,11 @@ static eat_bool gps_sendGPS(double lat,double lng)
 {
     u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
     MSG* msg = allocMsg(msgLen);
+    MSG_GPS* gps = (MSG_GPS*)msg->data;
+
     msg->cmd = CMD_GPS_UPDATE;
     msg->length = sizeof(MSG_GPS);
     
-    //TODO:
-    MSG_GPS* gps = (MSG_GPS*)msg->data;
     gps->latitude = lat;
     gps->longitude = lng;
 
