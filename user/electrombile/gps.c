@@ -19,6 +19,7 @@
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
+static eat_bool gps_sendGPS(double lat,double lng);
 
 static unsigned int gps_timer_period = 30000;
 
@@ -104,15 +105,17 @@ static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
 }
 
-static eat_bool gps_sendGPS(double lat,double lon)
+static eat_bool gps_sendGPS(double lat,double lng)
 {
     u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
     MSG* msg = allocMsg(msgLen);
+    msg->cmd = CMD_GPS_UPDATE;
+    msg->length = sizeof(MSG_GPS);
     
     //TODO:
     MSG_GPS* gps = (MSG_GPS*)msg->data;
     gps->latitude = lat;
-    gps->longitude = lon;
+    gps->longitude = lng;
 
     return gps_sendMsg2Main(msg, msgLen);
 }
