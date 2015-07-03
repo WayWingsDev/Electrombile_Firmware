@@ -11,19 +11,19 @@
 #define _DEBUG
 #define _ERROR
 
-#ifdef _DEBUG
+#ifdef LOG_DEBUG_FLAG
 #define LOG_DEBUG(fmt, ...) eat_trace("[DBG][s]"fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(fmt, ...)
 #endif
 
-#ifdef _INFO
+#ifdef LOG_INFO_FLAG
 #define LOG_INFO(fmt, ...) eat_trace("[INF][s]"fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_INFO(fmt, ...)
 #endif
 
-#ifdef _ERROR
+#ifdef LOG_ERROR_FLAG
 #define LOG_ERROR(fmt, ...) eat_trace("[ERR][s]"fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define LOG_ERROR(fmt, ...)
