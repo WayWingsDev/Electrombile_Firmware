@@ -20,6 +20,8 @@ static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
 
+static unsigned int gps_timer_period = 30000;
+
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
@@ -28,7 +30,7 @@ void app_gps_thread(void *data)
 
     eat_trace("gps current sleep mode %d", eat_gps_sleep_read());
 
-    eat_timer_start(TIMER_GPS, 30000);
+    eat_timer_start(TIMER_GPS, gps_timer_period);
 
     while(EAT_TRUE)
     {
