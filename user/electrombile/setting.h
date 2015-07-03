@@ -20,8 +20,11 @@ typedef enum
 typedef struct
 {
 	ADDR_TYPE addr_type;
-	u8 ipaddr[4];
-	u8 domain[MAX_DOMAIN_NAME_LEN];
+	union
+	{
+		u8 domain[MAX_DOMAIN_NAME_LEN];
+		u8 ipaddr[4];
+	}addr;
 }SETTING;
 
 eat_bool SETTING_initial(void);
