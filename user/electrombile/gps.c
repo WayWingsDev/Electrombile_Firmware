@@ -102,7 +102,7 @@ static void gps_timer_handler()
 
 static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
 {
-    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
+    return sendMsg(THREAD_GPS, THREAD_MAIN, msg, len);
 }
 
 static eat_bool gps_sendGPS(double lat,double lng)
