@@ -8,6 +8,8 @@
 #include <eat_interface.h>
 #include "timer.h"
 #include "watchdog.h"
+#include "msg.h"
+#include "log.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -50,7 +52,7 @@ int event_proc(EatEvent_st* event)
 			}
 			else
 			{
-		        eat_trace("[%s] event(%d) not processed!", __FUNCTION__, event->event);
+		        LOG_ERROR("event(%d) not processed!", event->event);
 			}
 		}
 	}
@@ -63,12 +65,12 @@ int event_timer(const EatEvent_st* event)
 	switch (event->data.timer.timer_id)
 	{
 		case TIMER_WATCHDOG:
-			eat_trace("TIMER_WATCHDOG expire!");
+			LOG_INFO("TIMER_WATCHDOG expire!");
 			feedWatchdog();
 			eat_timer_start(event->data.timer.timer_id, 50000);
 			break;
 		default:
-			eat_trace("[%s] timer(%d) not processed", __FUNCTION__, event->data.timer.timer_id);
+			LOG_ERROR ("timer(%d) not processed", event->data.timer.timer_id);
 			break;
 	}
 	return 0;
@@ -76,6 +78,28 @@ int event_timer(const EatEvent_st* event)
 
 int event_threadMsg(const EatEvent_st* event)
 {
+	MSG* msg = (MSG*)event->data.user_msg.data_p;
+	u8 msgLen = event->data.user_msg.len;
+
+	switch (msg->cmd)
+	{
+	case CMD_GPS_UPDATE:
+	{
+		MSG_GPS* gps = (MSG_GPS*)msg->data;
+		if (!gps)
+		{
+			break;
+		}
+		LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->latitude, gps->longitude);
+		break;
+	}
+
+	case CMD_SMS:
+		LOG_DEBUG("receive thread command CMD_SMS");
+		break;
+	default:
+		LOG_ERROR("unknown thread command:%d", msg->cmd);
+	}
 
 }
 

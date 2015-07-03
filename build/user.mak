@@ -33,9 +33,9 @@ SRC_OPEN_MODE_NAME = electrombile
 # #ifdef APP_EXAMPLE
 # do something...;
 # #endif
-FEA_APP_LOG_ERROR = -D_ERROR
-FEA_APP_LOG_INFO = -D_INFO
-FEA_APP_LOG_DEBUG = -D_DEBUG
+FEA_APP_LOG_ERROR = -DLOG_ERROR_FLAG
+FEA_APP_LOG_INFO = -DLOG_INFO_FLAG
+FEA_APP_LOG_DEBUG = -DLOG_DEBUG_FLAG
 ####################### WMMP begin ###########################
 #FEA_APP_WMMP_OPT = -D__SIMCOM_WMMP__
 #eat wmmp interface

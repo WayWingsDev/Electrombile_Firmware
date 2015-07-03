@@ -9,12 +9,14 @@
 static SETTING setting =
 {
 		ADDR_TYPE_DOMAIN,
-		{0},
-		"server.xiaoan110.com"
+		{
+				"server.xiaoan110.com",
+		},
+
 };
 
 /*
- * 从FLASH中读取设置
+ * read setting from flash
  */
 eat_bool SETTING_initial(void)
 {
@@ -22,7 +24,7 @@ eat_bool SETTING_initial(void)
 }
 
 /*
- * 保存设置到FLASH
+ * save setting to flash
  */
 eat_bool SETTING_save(void)
 {

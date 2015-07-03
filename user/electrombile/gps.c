@@ -19,6 +19,7 @@
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
+static eat_bool gps_sendGPS(double lat,double lng);
 
 static unsigned int gps_timer_period = 30000;
 
@@ -80,7 +81,7 @@ static void gps_timer_handler()
 	char gps_fix;
 	int i;
 	eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
-	eat_trace("EAT_NMEA_OUTPUT_SIMCOM=%s", gps_info_buf);
+	LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
 
 	buffer = gps_info_buf;
 	for(i=0;i<7;i++)
@@ -92,27 +93,31 @@ static void gps_timer_handler()
 	lon =  atof(GPSIM_data[4]);
 	gps_fix = atoi(GPSIM_data[6]);
 	if(!gps_fix)
+	{
+		LOG_ERROR("GPS not fixed");
 		return;
+	}
 	
+	LOG_DEBUG("lat=%f,lon=%f,fix=%d",lat,lon,gps_fix);
 	gps_sendGPS(lat,lon);
-	eat_trace("%s,%s,%s,%s,%s,%s,%s",GPSIM_data[0],GPSIM_data[1],GPSIM_data[2],GPSIM_data[3],GPSIM_data[4],GPSIM_data[5],GPSIM_data[6]);
-	eat_trace("lat=%f,lon=%f,fix=%d",lat,lon,gps_fix);
 }
 
 static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
 {
-    return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
+    return sendMsg(THREAD_GPS, THREAD_MAIN, msg, len);
 }
 
-static eat_bool gps_sendGPS(double lat,double lon)
+static eat_bool gps_sendGPS(double lat,double lng)
 {
     u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
     MSG* msg = allocMsg(msgLen);
-    
-    //TODO:
     MSG_GPS* gps = (MSG_GPS*)msg->data;
+
+    msg->cmd = CMD_GPS_UPDATE;
+    msg->length = sizeof(MSG_GPS);
+    
     gps->latitude = lat;
-    gps->longitude = lon;
+    gps->longitude = lng;
 
     return gps_sendMsg2Main(msg, msgLen);
 }
