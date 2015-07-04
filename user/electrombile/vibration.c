@@ -7,12 +7,17 @@
 #include "log.h"
 #include"timer.h"
 #include "msg.h"
+
 static unsigned int vibration_timer_period = 100;
 static short datax[10],datay[10],dataz[10];
 static long data_x2y2z2[10];
 static int vibration_data_i=0;
 #define VIBRATION_TRESHOLD 100000000
+
+static void vibration_timer_handler();
+static eat_bool vibration_sendMsg2Main(MSG* msg, u8 len);
 static eat_bool vibration_sendAlarm();
+
 float  fangcha(long *array,int len)
 {
    int i;
@@ -27,6 +32,7 @@ float  fangcha(long *array,int len)
    ave=sum/len;
    return ave;
 }
+
 void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
@@ -139,9 +145,13 @@ static eat_bool vibration_sendAlarm()
 {
     u8 msgLen = sizeof(MSG) + sizeof(MSG_VIBRATE);
     MSG* msg = allocMsg(msgLen);
-    //TODO:
     MSG_VIBRATE* vibrate = (MSG_VIBRATE*)msg->data;
+
+    msg->cmd = CMD_VIBRATE;
+    msg->length = sizeof(MSG_VIBRATE);
+
     vibrate->isVibrate = EAT_TRUE;
     eat_trace("isVibrate=%d",vibrate->isVibrate);
+
     return vibration_sendMsg2Main(msg, msgLen);
 }
