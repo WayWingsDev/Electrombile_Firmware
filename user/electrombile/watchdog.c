@@ -13,13 +13,13 @@ void startWatchdog(void)
 {
 	eat_bool rc = eat_watchdog_start(60000,0); //60s, reboot if over time
 
-    if(!rc)
+    if(rc)
     {
         eat_trace("open watchdog success");
     }
     else
     {
-        eat_trace("open watchdog fail");
+        eat_trace("open watchdog fail:%d", rc);
     }
 }
 
