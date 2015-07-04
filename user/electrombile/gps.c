@@ -7,13 +7,15 @@
 
 #include <eat_interface.h>
 #include <eat_gps.h>
+#include<string.h>
+#include <stdlib.h>
 
 #include "gps.h"
 #include "timer.h"
 #include "thread.h"
 #include "msg.h"
-#include<string.h>
-#include <stdlib.h>
+#include "log.h"
+
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
