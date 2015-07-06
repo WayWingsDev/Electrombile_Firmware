@@ -46,6 +46,7 @@ void app_gps_thread(void *data)
                 {
                     case TIMER_GPS:
                         eat_trace("INFO: TIMER_GPS expire!");
+                        
                         gps_timer_handler();
                         eat_timer_start(event.data.timer.timer_id, 30000);
                         break;

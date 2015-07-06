@@ -23,7 +23,7 @@
 #include "setting.h"
 #include "log.h"
 #include "version.h"
-
+#include "app_at_cmd_envelope.h"
 /********************************************************************
  * Macros
  ********************************************************************/
@@ -77,7 +77,7 @@ APP_ENTRY_FLAG
 		(app_user_func)app_gps_thread,//app_user1,
 		(app_user_func)app_sms_thread,//app_user2,
 		(app_user_func)app_vibration_thread,//app_user3,
-		(app_user_func)EAT_NULL,//app_user4,
+		(app_user_func)app_at_cmd_envelope,//app_user4,
 		(app_user_func)EAT_NULL,//app_user5,
 		(app_user_func)EAT_NULL,//app_user6,
 		(app_user_func)EAT_NULL,//app_user7,
@@ -108,9 +108,9 @@ void app_func_ext1(void *data)
         EAT_UART_PARITY_NONE
     };
     
-    eat_uart_set_at_port(EAT_UART_1);// UART1 is as AT PORT
+    eat_uart_set_at_port(EAT_UART_USB);// UART1 is as AT PORT
   
-	eat_uart_set_debug(EAT_UART_USB);
+	eat_uart_set_debug(EAT_UART_1);
     eat_uart_set_debug_config(EAT_UART_DEBUG_MODE_UART, &cfg);
 }
 
@@ -133,12 +133,12 @@ void app_main(void *data)
 
     SETTING_initial();
 
-    socket_init();
+   // socket_init();
 
     startWatchdog();
     eat_timer_start(TIMER_WATCHDOG, 50000);
-
-
+    eat_modem_write("AT+CGATT?\n",10);
+    eat_timer_start(EAT_TIMER_6,50000);
     while(EAT_TRUE)
     {
     	unsigned int event_num = eat_get_event_num();
@@ -228,7 +228,7 @@ void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4])
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
-        address.port = 6789;                /* TCP server port */
+        address.port = 43210;                /* TCP server port */
         address.addr[0]=120;                /* TCP server ip address */
         address.addr[1]=25;
         address.addr[2]=157;
