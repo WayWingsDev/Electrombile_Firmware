@@ -23,7 +23,6 @@
 #include "setting.h"
 #include "log.h"
 #include "version.h"
-#include "app_at_cmd_envelope.h"
 /********************************************************************
  * Macros
  ********************************************************************/
@@ -45,7 +44,7 @@ typedef void (*app_user_func)(void*);
  ********************************************************************/
 
 static u8 s_memPool[EAT_MEM_MAX_SIZE];
-static s8 socket_id = 0;
+
 
 
 /********************************************************************
@@ -58,10 +57,6 @@ extern void APP_InitRegions(void);
  ********************************************************************/
 void app_main(void *data);
 void app_func_ext1(void *data);
-
-static void socket_init(void);
-static void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4]);
-static void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size);
 /********************************************************************
  * Local Function
  ********************************************************************/
@@ -77,7 +72,7 @@ APP_ENTRY_FLAG
 		(app_user_func)app_gps_thread,//app_user1,
 		(app_user_func)app_sms_thread,//app_user2,
 		(app_user_func)app_vibration_thread,//app_user3,
-		(app_user_func)app_at_cmd_envelope,//app_user4,
+		(app_user_func)EAT_NULL,//app_user4,
 		(app_user_func)EAT_NULL,//app_user5,
 		(app_user_func)EAT_NULL,//app_user6,
 		(app_user_func)EAT_NULL,//app_user7,
@@ -132,13 +127,9 @@ void app_main(void *data)
     }
 
     SETTING_initial();
-
-   // socket_init();
-
     startWatchdog();
     eat_timer_start(TIMER_WATCHDOG, 50000);
-    eat_modem_write("AT+CGATT?\n",10);
-    eat_timer_start(EAT_TIMER_6,50000);
+    eat_timer_start(TIMER_AT_ENVELOPE_TIMER1,5000);
     while(EAT_TRUE)
     {
     	unsigned int event_num = eat_get_event_num();
@@ -159,100 +150,5 @@ void app_main(void *data)
 }
 
 
-static void socket_init(void)
-{
-	s8 rc = eat_gprs_bearer_open("CMNET",NULL,NULL,bear_notify_cb);
-
-	if (rc == CBM_OK)
-	{
-		rc = eat_gprs_bearer_hold();
-		if (rc != CBM_OK)
-		{
-			eat_trace("[%s] hold bearer failed", __FUNCTION__);
-		}
-	}
-	else if (rc == CBM_WOULDBLOCK)
-	{
-		eat_trace("[%s] opening bearer...", __FUNCTION__);
-	}
-	else
-	{
-		eat_trace("[%s] open bearer failed", __FUNCTION__);
-		//TODO: reboot
-	}
-}
-
-void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4])
-{
-	s8 rc = 0;
-	eat_bool val = EAT_TRUE;
-	sockaddr_struct address={SOC_SOCK_STREAM};
-
-	eat_trace("[%s] BEAR_NOTIFY: %d", __FUNCTION__, state);
-
-	if (state & CBM_ACTIVATED)
-	{
-		eat_trace("[%s] ip: %d.%d.%d.%d", __FUNCTION__, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
-
-        eat_soc_notify_register(soc_notify_cb);
-        socket_id = eat_soc_create(SOC_SOCK_STREAM,0);
-        if (socket_id < 0)
-        {
-    		eat_trace("[%s] eat_soc_create return error :%d", __FUNCTION__, socket_id);
-    		//TODO: error handle
-    		return;
-        }
-
-        rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-        	eat_trace("[%s] eat_soc_setsockopt set SOC_NBIO failed: %d", __FUNCTION__, rc);
-        	//TODO: error handle
-        	return;
-        }
-
-        rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-			eat_trace("[%s] eat_soc_setsockopt set SOC_NODELAY failed: %d", __FUNCTION__, rc);
-        }
-
-        val = SOC_READ | SOC_WRITE | SOC_CLOSE | SOC_CONNECT;
-        rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-        	eat_trace("[%s] eat_soc_setsockopt set SOC_ASYNC failed: %d", __FUNCTION__, rc);
-        	//TODO: error handle
-        	return;
-        }
-
-        address.sock_type = SOC_SOCK_STREAM;
-        address.addr_len = 4;
-        address.port = 43210;                /* TCP server port */
-        address.addr[0]=120;                /* TCP server ip address */
-        address.addr[1]=25;
-        address.addr[2]=157;
-        address.addr[3]=233;
-
-        rc = eat_soc_connect(socket_id, &address);
-        if(rc >= 0)
-        {
-			eat_trace("NEW Connection ID is :%d", rc);
-		}
-		else if (rc == SOC_WOULDBLOCK)
-		{
-			eat_trace("Connection is in progressing");
-		}
-		else
-		{
-			eat_trace("Connect return error:%d", rc);
-		}
-	}
-}
-
-void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
-{
-
-}
 
 

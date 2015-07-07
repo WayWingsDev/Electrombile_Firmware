@@ -14,9 +14,9 @@ static long data_x2y2z2[10];
 static int vibration_data_i=0;
 #define VIBRATION_TRESHOLD 100000000
 
-static void vibration_timer_handler();
 static eat_bool vibration_sendMsg2Main(MSG* msg, u8 len);
 static eat_bool vibration_sendAlarm();
+static void vibration_timer_handler();
 
 float  fangcha(long *array,int len)
 {
@@ -74,7 +74,7 @@ void app_vibration_thread(void *data)
                 {
 
 			case TIMER_VIBRATION:
-                        eat_trace("INFO: TIMER_VIBRATION expire!");
+    //                    eat_trace("INFO: TIMER_VIBRATION expire!");
                         vibration_timer_handler();
                         eat_timer_start(event.data.timer.timer_id, vibration_timer_period);
                         break;
@@ -124,7 +124,7 @@ static void vibration_timer_handler()
 		dataz[vibration_data_i]  = ((read_buffer[4] << 8) & 0xff00) | read_buffer[5];
 		data_x2y2z2[vibration_data_i] = datax[vibration_data_i]*datax[vibration_data_i]+datay[vibration_data_i]*datay[vibration_data_i]+dataz[vibration_data_i]*dataz[vibration_data_i];
 		delta =abs( data_x2y2z2[vibration_data_i]- 282305280);
-		eat_trace("delta=%d, data_x2y2z2[vibration_data_i] = %d",delta, data_x2y2z2[vibration_data_i]);
+//		eat_trace("delta=%d, data_x2y2z2[vibration_data_i] = %d",delta, data_x2y2z2[vibration_data_i]);
 		if(delta > VIBRATION_TRESHOLD)
 			vibration_sendAlarm();
 		vibration_data_i++;

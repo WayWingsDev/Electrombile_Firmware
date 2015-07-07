@@ -63,7 +63,6 @@ enum {
 };
 
 void app_vibration_thread(void *data);
-static void vibration_timer_handler();
 
 
 #endif //ELECTROMBILE_FIRMWARE_VIBRATION_H
