@@ -4,16 +4,17 @@
  *  Created on: 2015/6/25
  *      Author: jk
  */
+#include <string.h>
+#include <stdlib.h>
 
 #include <eat_interface.h>
 #include <eat_gps.h>
-#include<string.h>
-#include <stdlib.h>
+
 
 #include "gps.h"
 #include "timer.h"
 #include "thread.h"
-#include "msg.h"
+#include "thread_msg.h"
 #include "log.h"
 
 

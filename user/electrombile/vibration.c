@@ -6,7 +6,7 @@
 #include "thread.h"
 #include "log.h"
 #include"timer.h"
-#include "msg.h"
+#include "thread_msg.h"
 
 static unsigned int vibration_timer_period = 100;
 static short datax[10],datay[10],dataz[10];

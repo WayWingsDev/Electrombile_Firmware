@@ -10,7 +10,7 @@
 
 #include "timer.h"
 #include "watchdog.h"
-#include "msg.h"
+#include "thread_msg.h"
 #include "log.h"
 #include "uart.h"
 #include "socket.h"
@@ -108,7 +108,7 @@ int event_threadMsg(const EatEvent_st* event)
 {
 	MSG* msg = (MSG*)event->data.user_msg.data_p;
 	u8 msgLen = event->data.user_msg.len;
-       u8 buffer[1046] = {0};
+
 	switch (msg->cmd)
 	{
 	case CMD_GPS_UPDATE:
@@ -119,6 +119,7 @@ int event_threadMsg(const EatEvent_st* event)
 			break;
 		}
 		LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->latitude, gps->longitude);
+
 		break;
 	}
 

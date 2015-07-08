@@ -39,7 +39,7 @@ char* getEventDescription(soc_event_enum event)
 		default:
 		{
 			static char soc_event[10] = {0};
-			sprintf(soc_event: "%d", event);
+			sprintf(soc_event, "%d", event);
 			return soc_event;
 		}
 	}
@@ -71,7 +71,7 @@ char* getStateDescription(cbm_bearer_state_enum state)
 		default:
 		{
 			static char bearer_state[10] = {0};
-			sprintf(bearer_state: "%d", state);
+			sprintf(bearer_state, "%d", state);
 			return bearer_state;
 		}
 	}
@@ -80,6 +80,7 @@ char* getStateDescription(cbm_bearer_state_enum state)
 void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
     u8 buffer[128] = {0};
+    s32 rc = 0;
 
     LOG_DEBUG("SOCKET notify:socketid(%d), event(%s)", s, getEventDescription(event));
 
@@ -87,6 +88,9 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
     {
     case SOC_READ:
     	socket_id = s;		//TODO: according to the demo, but why?
+
+    	rc = eat_soc_recv(socket_id, buffer, 128);
+    	LOG_DEBUG("socket recv: %s", buffer);
     	break;
 
     case SOC_CONNECT:
@@ -112,7 +116,7 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 	eat_bool val = EAT_TRUE;
 	sockaddr_struct address={SOC_SOCK_STREAM};
 
-	LOG_INFO("BEAR_NOTIFY: %s", getStateDescription);
+	LOG_INFO("BEAR_NOTIFY: %s", getStateDescription(state));
 
 	if (state & CBM_ACTIVATED)
 	{
@@ -215,4 +219,6 @@ s32 socket_sendData(const void* data, s32 len)
 	{
 		LOG_ERROR("sokcet send data failed:%d", rc);
 	}
+
+	return rc;
 }

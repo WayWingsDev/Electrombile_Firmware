@@ -2,7 +2,7 @@
 // Created by jk on 2015/7/1.
 //
 
-#include "msg.h"
+#include "thread_msg.h"
 
 MSG* allocMsg(u8 len)
 {
