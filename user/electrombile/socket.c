@@ -39,7 +39,7 @@ char* getEventDescription(soc_event_enum event)
 		default:
 		{
 			static char soc_event[10] = {0};
-			sprintf(soc_event, "%d", event);
+			sprintf(soc_event: "%d", event);
 			return soc_event;
 		}
 	}
@@ -71,7 +71,7 @@ char* getStateDescription(cbm_bearer_state_enum state)
 		default:
 		{
 			static char bearer_state[10] = {0};
-			sprintf(bearer_state, "%d", state);
+			sprintf(bearer_state: "%d", state);
 			return bearer_state;
 		}
 	}
