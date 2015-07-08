@@ -2,8 +2,8 @@
 // Created by jk on 2015/7/1.
 //
 
-#ifndef ELECTROMBILE_FIRMWARE_MSG_H
-#define ELECTROMBILE_FIRMWARE_MSG_H
+#ifndef ELECTROMBILE_FIRMWARE_THREAD_MSG_H
+#define ELECTROMBILE_FIRMWARE_THREAD_MSG_H
 
 #include <eat_type.h>
 #include <eat_interface.h>

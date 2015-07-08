@@ -14,13 +14,13 @@
 
 #define SETITINGFILE_NAME  L"C:\\setting.txt"
 
-static SETTING setting =
+SETTING setting =
 {
 		ADDR_TYPE_DOMAIN,
 		{
 				"server.xiaoan110.com",
 		},
-
+		6789,
 };
 
 /*
@@ -33,10 +33,21 @@ eat_bool SETTING_initial(void)
     static eat_fs_error_enum fs_Op_ret;
     UINT readLen;
     testFileHandle = eat_fs_Open(SETITINGFILE_NAME,FS_READ_ONLY);
+    setting.addr_type = ADDR_TYPE_IP;
+
+    setting.addr.ipaddr[0] = 120;
+    setting.addr.ipaddr[1] = 25;
+    setting.addr.ipaddr[2] = 157;
+    setting.addr.ipaddr[3] = 233;
+
+    setting.port = 9876;
+
+    setting.gps_timer_period = 30 * 1000;	//30 seconds
+    setting.vibration_timer_period = 100;	//100 ms
     if(testFileHandle<EAT_FS_NO_ERROR)
     {
         eat_trace("eat_fs_Open():Create File Fail,and Return Error is %x",testFileHandle);
-        //TODO SETTING INIT
+        //TODO SETTING INIT        
         return ;
     }
     else
@@ -67,7 +78,7 @@ eat_bool SETTING_initial(void)
 	}
     }
     
-    
+
 }
 
 /*

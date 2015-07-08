@@ -1,14 +1,16 @@
 //
 // Created by jk on 2015/7/1.
 //
+#include <eat_interface.h>
+#include <eat_periphery.h>
 
 #include "vibration.h"
 #include "thread.h"
 #include "log.h"
-#include"timer.h"
-#include "msg.h"
+#include "timer.h"
+#include "thread_msg.h"
+#include "setting.h"
 
-static unsigned int vibration_timer_period = 100;
 static short datax[10],datay[10],dataz[10];
 static long data_x2y2z2[10];
 static int vibration_data_i=0;
@@ -37,31 +39,33 @@ void app_vibration_thread(void *data)
 {
 	EatEvent_st event;
 	s32 ret;
-	u8 write_buffer[10]=0;
-	eat_trace(" i2c test eat_i2c_open start");
+	u8 write_buffer[10] = {0};
+
+	LOG_INFO("vibration thread start");
+
 	ret=eat_i2c_open(EAT_I2C_OWNER_0,0x1D,100);
 	if(ret!=0)
 	{
-	    eat_trace("i2c test eat_i2c_open fail :ret=%d",ret);
+	    LOG_ERROR("i2c test eat_i2c_open fail :ret=%d",ret);
 	}
 	else
 	{
-	    eat_trace("i2c test eat_i2c_open success");
+	    LOG_INFO("i2c test eat_i2c_open success");
 	}
+
 	write_buffer[0]=MMA8X5X_CTRL_REG1;
 	write_buffer[1]=0x1;
 	ret=eat_i2c_write(EAT_I2C_OWNER_0,write_buffer,2);
 	if(ret!=0)
 	{
-	 eat_trace("start sample fail :ret=%d",ret);
+		LOG_ERROR("start sample fail :ret=%d",ret);
 	}
 	else
 	{
-	 eat_trace("start sample  success");
+		LOG_INFO("start sample  success");
 	}
 
-	eat_timer_start(TIMER_VIBRATION, vibration_timer_period);
-	LOG_DEBUG("Vibration thread start");
+	eat_timer_start(TIMER_VIBRATION, setting.vibration_timer_period);
 
 	while(EAT_TRUE)
 	{
@@ -69,33 +73,23 @@ void app_vibration_thread(void *data)
         switch(event.event)
         {
             case EAT_EVENT_TIMER :
+				switch (event.data.timer.timer_id)
+				{
 
-                switch ( event.data.timer.timer_id )
-                {
+				case TIMER_VIBRATION:
+					vibration_timer_handler();
+					eat_timer_start(event.data.timer.timer_id, setting.vibration_timer_period);
+					break;
 
-			case TIMER_VIBRATION:
-    //                    eat_trace("INFO: TIMER_VIBRATION expire!");
-                        vibration_timer_handler();
-                        eat_timer_start(event.data.timer.timer_id, vibration_timer_period);
-                        break;
+				default:
+					LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
 
-                    default:
-                        LOG_ERROR("ERR: timer[%d] expire!");
+					break;
+				}
+					break;
 
-                        break;
-                }
-                break;
-
-            case EAT_EVENT_MDM_READY_RD:
-                break;
-
-            case EAT_EVENT_MDM_READY_WR:
-
-                break;
-            case EAT_EVENT_USER_MSG:
-
-                break;
             default:
+            	LOG_ERROR("event(%d) not processed", event.event);
                 break;
 
         }
@@ -115,7 +109,7 @@ static void vibration_timer_handler()
 
 	if(ret!=0)
 	{
-		eat_trace("i2c test eat_i2c_read 0AH fail :ret=%d",ret);		  
+//		eat_trace("i2c test eat_i2c_read 0AH fail :ret=%d",ret);
 	}
 	else
 	{

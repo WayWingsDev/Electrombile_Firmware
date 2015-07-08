@@ -4,18 +4,19 @@
  *  Created on: 2015/6/25
  *      Author: jk
  */
+#include <string.h>
+#include <stdlib.h>
 
 #include <eat_interface.h>
 #include <eat_gps.h>
-#include<string.h>
-#include <stdlib.h>
+
 
 #include "gps.h"
 #include "timer.h"
 #include "thread.h"
-#include "msg.h"
+#include "thread_msg.h"
 #include "log.h"
-
+#include "setting.h"
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
@@ -23,7 +24,6 @@ static char gps_info_buf[NMEA_BUFF_SIZE]="";
 static void gps_timer_handler();
 static eat_bool gps_sendGPS(double lat,double lng);
 
-static unsigned int gps_timer_period = 30000;
 
 void app_gps_thread(void *data)
 {
@@ -31,9 +31,9 @@ void app_gps_thread(void *data)
 
     eat_gps_power_req(EAT_TRUE);
 
-    eat_trace("gps current sleep mode %d", eat_gps_sleep_read());
+    LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
 
-    eat_timer_start(TIMER_GPS, gps_timer_period);
+    eat_timer_start(TIMER_GPS, setting.gps_timer_period);
 
     while(EAT_TRUE)
     {
@@ -41,34 +41,24 @@ void app_gps_thread(void *data)
         switch(event.event)
         {
             case EAT_EVENT_TIMER :
-
                 switch ( event.data.timer.timer_id )
                 {
                     case TIMER_GPS:
-                        eat_trace("INFO: TIMER_GPS expire!");                        
+                    	LOG_INFO("IMER_GPS expire!");
                         gps_timer_handler();
-                        eat_timer_start(event.data.timer.timer_id, 30000);
+                        eat_timer_start(event.data.timer.timer_id, setting.gps_timer_period);
                         break;
 
 
                     default:
-                        eat_trace("ERR: timer[%d] expire!");
+                    	LOG_ERROR("ERR: timer[%d] expire!", event.data.timer.timer_id);
 
                         break;
                 }
                 break;
 
-            case EAT_EVENT_MDM_READY_RD:
-//                eat_modem_ready_read_handler();
-                break;
-
-            case EAT_EVENT_MDM_READY_WR:
-
-                break;
-            case EAT_EVENT_USER_MSG:
-
-                break;
             default:
+            	LOG_ERROR("event(%d) not processed", event.event);
                 break;
 
         }

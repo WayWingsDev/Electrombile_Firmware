@@ -8,9 +8,6 @@
 #ifndef USER_ELECTROMBILE_LOG_H_
 #define USER_ELECTROMBILE_LOG_H_
 
-#define _DEBUG
-#define _ERROR
-
 #ifdef LOG_DEBUG_FLAG
 #define LOG_DEBUG(fmt, ...) eat_trace("[DBG][%s]"fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
