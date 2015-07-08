@@ -78,6 +78,15 @@ char* getStateDescription(cbm_bearer_state_enum state)
 	}
 }
 
+
+void hostname_notify_cb(u32 request_id,eat_bool result,u8 ip_addr[4])
+{
+	if (result == EAT_TRUE)
+	{
+		//TODO: connect to server
+	}
+}
+
 void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
     u8 buffer[128] = {0};
@@ -173,7 +182,30 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
         }
         else
         {
-        	//TODO: get the host ip address according the host domain name
+        	u8 ipaddr[4] = {0};
+        	u8 len = 0;
+
+        	eat_soc_gethost_notify_register(hostname_notify_cb);
+        	rc = eat_soc_gethostbyname(setting.addr.domain, ipaddr, &len, 1234);
+        	if (rc == SOC_SUCCESS)
+        	{
+                address.addr[0] = ipaddr[0];
+                address.addr[1] = ipaddr[1];
+                address.addr[2] = ipaddr[2];
+                address.addr[3] = ipaddr[3];
+
+                LOG_DEBUG("host:%s -> %d.%d.%d.%d", setting.addr.domain, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
+        	}
+        	else if (rc == SOC_WOULDBLOCK)
+        	{
+        		LOG_INFO("eat_soc_gethostbyname wait callback");
+        		return;
+        	}
+        	else
+        	{
+        		LOG_ERROR("eat_soc_gethostbyname error!");
+        		return;
+        	}
         }
         address.port =  setting.port;                /* TCP server port */
 
