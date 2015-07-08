@@ -125,7 +125,7 @@ void app_main(void *data)
     {
     	LOG_ERROR("eat memory initial error:%d!", rc);
     }
-
+  //  SETTING_save();
     SETTING_initial();
     startWatchdog();
     eat_timer_start(TIMER_WATCHDOG, 50000);
