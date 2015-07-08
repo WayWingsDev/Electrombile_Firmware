@@ -6,13 +6,13 @@
  */
 #include "setting.h"
 
-static SETTING setting =
+SETTING setting =
 {
 		ADDR_TYPE_DOMAIN,
 		{
 				"server.xiaoan110.com",
 		},
-
+		6789,
 };
 
 /*
@@ -20,7 +20,14 @@ static SETTING setting =
  */
 eat_bool SETTING_initial(void)
 {
+	setting.addr_type = ADDR_TYPE_IP;
 
+	setting.addr.ipaddr[0] = 120;
+	setting.addr.ipaddr[1] = 25;
+	setting.addr.ipaddr[2] = 157;
+	setting.addr.ipaddr[3] = 233;
+
+    setting.port = 9876;
 }
 
 /*

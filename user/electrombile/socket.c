@@ -10,6 +10,7 @@
 #include <eat_socket.h>
 
 #include "socket.h"
+#include "setting.h"
 #include "log.h"
 
 static s8 socket_id = 0;
@@ -163,11 +164,19 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 
         address.sock_type = SOC_SOCK_STREAM;
         address.addr_len = 4;
-        address.port = 43210;                /* TCP server port */
-        address.addr[0]=120;                /* TCP server ip address */
-        address.addr[1]=25;
-        address.addr[2]=157;
-        address.addr[3]=233;
+        if (setting.addr_type == ADDR_TYPE_IP)
+        {
+            address.addr[0] = setting.addr.ipaddr[0];
+            address.addr[1] = setting.addr.ipaddr[1];
+            address.addr[2] = setting.addr.ipaddr[2];
+            address.addr[3] = setting.addr.ipaddr[3];
+        }
+        else
+        {
+        	//TODO: get the host ip address according the host domain name
+        }
+        address.port =  setting.port;                /* TCP server port */
+
 
         rc = eat_soc_connect(socket_id, &address);
         if(rc >= 0)

@@ -25,8 +25,10 @@ typedef struct
 		u8 domain[MAX_DOMAIN_NAME_LEN];
 		u8 ipaddr[4];
 	}addr;
+	u16 port;
 }SETTING;
 
+extern SETTING setting;
 eat_bool SETTING_initial(void);
 eat_bool SETTING_save(void);
 #endif /* USER_ELECTROMBILE_SETTING_H_ */
