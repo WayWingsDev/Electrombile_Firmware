@@ -28,6 +28,9 @@ eat_bool SETTING_initial(void)
 	setting.addr.ipaddr[3] = 233;
 
     setting.port = 9876;
+
+    setting.gps_timer_period = 30 * 1000;	//30 seconds
+    setting.vibration_timer_period = 100;	//100 ms
 }
 
 /*

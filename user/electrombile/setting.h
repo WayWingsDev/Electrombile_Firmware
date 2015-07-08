@@ -19,6 +19,7 @@ typedef enum
 
 typedef struct
 {
+	//Server configuration
 	ADDR_TYPE addr_type;
 	union
 	{
@@ -26,9 +27,14 @@ typedef struct
 		u8 ipaddr[4];
 	}addr;
 	u16 port;
+
+	//Timer configuration
+	u32 gps_timer_period;
+	u32 vibration_timer_period;
 }SETTING;
 
 extern SETTING setting;
+
 eat_bool SETTING_initial(void);
 eat_bool SETTING_save(void);
 #endif /* USER_ELECTROMBILE_SETTING_H_ */
