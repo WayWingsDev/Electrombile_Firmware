@@ -23,7 +23,7 @@ static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
 static eat_bool gps_sendGPS(double lat,double lng);
-
+static void geo_fence_proc_cb(char *msg_buf, u8 len);
 
 void app_gps_thread(void *data)
 {
@@ -33,6 +33,7 @@ void app_gps_thread(void *data)
 
     LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
 
+    eat_gps_register_msg_proc_callback(geo_fence_proc_cb);
     eat_timer_start(TIMER_GPS, setting.gps_timer_period);
 
     while(EAT_TRUE)
@@ -112,5 +113,10 @@ static eat_bool gps_sendGPS(double lat,double lng)
     gps->longitude = lng;
 
     return gps_sendMsg2Main(msg, msgLen);
+}
+
+static void geo_fence_proc_cb(char *msg_buf, u8 len)
+{
+    //TODO:
 }
 
