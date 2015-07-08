@@ -129,7 +129,7 @@ void app_main(void *data)
     SETTING_initial();
     startWatchdog();
     eat_timer_start(TIMER_WATCHDOG, 50000);
-    eat_timer_start(TIMER_AT_ENVELOPE_TIMER1,5000);
+    eat_timer_start(TIMER_AT_CMD,5000);
     while(EAT_TRUE)
     {
     	unsigned int event_num = eat_get_event_num();

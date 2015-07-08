@@ -6,11 +6,14 @@
  */
 
 #include <eat_interface.h>
+#include <eat_uart.h>
+
 #include "timer.h"
 #include "watchdog.h"
 #include "msg.h"
 #include "eat_socket.h"
 #include "log.h"
+#include "uart.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -26,7 +29,8 @@ typedef struct
 int event_timer(const EatEvent_st* event);
 int event_threadMsg(const EatEvent_st* event);
 static void socket_init(void);
-void event_mod_ready_rd();
+void event_mod_ready_rd(EatEvent_st* event);
+
 void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4]);
 void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size);;
 
@@ -36,7 +40,8 @@ static EVENT_PROC msgProcs[] =
 		{EAT_EVENT_TIMER,				event_timer},
 		{EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
 		{EAT_EVENT_MDM_READY_WR,        EAT_NULL},
-		{EAT_EVENT_UART_READY_RD,       EAT_NULL},
+		{EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
+		{EAT_EVENT_UART_READY_WR,		EAT_NULL},
 		{EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
 		{EAT_EVENT_USER_MSG,            event_threadMsg},
 };
@@ -126,7 +131,7 @@ void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4])
         rc = eat_soc_connect(socket_id, &address);
         if(rc >= 0)
         {
-		eat_trace("NEW Connection ID is :%d", rc);
+        	eat_trace("NEW Connection ID is :%d", rc);
         }
         else if (rc == SOC_WOULDBLOCK)
         {
@@ -142,7 +147,8 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 {
     u8 buffer[128] = {0};
     u8 id = 0;
-    if(event&SOC_READ) {id = 0;
+    if(event&SOC_READ) {
+    	id = 0;
         socket_id = s;
     }
     else if (event&SOC_WRITE) id = 1;
@@ -182,22 +188,24 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 }
 
 
-void event_mod_ready_rd()
+void event_mod_ready_rd(EatEvent_st* event)
 {
-    u8 buf[2048];
-    u16 len;
-    u8* buf_ptr = NULL;
-    /*param:%d,extern_param:%d*/
-     len = eat_modem_read(buf, 2048);
-     buf_ptr = (u8*)strstr((const char *)buf,"+CGATT: 1");
-    if( buf_ptr != NULL)
-    {
-        socket_init();
-        eat_timer_stop(TIMER_AT_ENVELOPE_TIMER1);
-    
-    }
+	u8 buf[256] = {0};
+	u16 len = 0;
+	u8* buf_ptr = NULL;
+
+	len = eat_modem_read(buf, 256);
+	LOG_DEBUG("modem recv: %s", buf);
+
+	buf_ptr = (u8*) strstr((const char *) buf, "+CGATT: 1");
+	if (buf_ptr != NULL)
+	{
+		socket_init();
+		eat_timer_stop(TIMER_AT_CMD);
+	}
  
 }
+
 
 int event_proc(EatEvent_st* event)
 {
@@ -230,11 +238,11 @@ int event_timer(const EatEvent_st* event)
 			feedWatchdog();
 			eat_timer_start(event->data.timer.timer_id, 50000);
 			break;
-              case TIMER_AT_ENVELOPE_TIMER1:
-                     LOG_INFO("TIMER_AT_ENVELOPE_TIMER1 expire!");
-                     eat_modem_write("AT+CGATT?\n",10);
-                     eat_timer_start(event->data.timer.timer_id, 5000);
-                     break;
+		case TIMER_AT_CMD:
+			 LOG_INFO("TIMER_AT_CMD expire!");
+			 eat_modem_write("AT+CGATT?\n",10);
+			 eat_timer_start(event->data.timer.timer_id, 5000);
+			 break;
 		default:
 			LOG_ERROR ("timer(%d) not processed", event->data.timer.timer_id);
 			break;
