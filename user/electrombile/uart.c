@@ -61,6 +61,21 @@ void event_uart_ready_rd(EatEvent_st* event)
         return;
     }
 
+    if (strstr(buf, "rtc"))
+    {
+        EatRtc_st rtc = {0};
+        eat_bool result = eat_get_rtc(&rtc);
+        if (result)
+        {
+            LOG_INFO("RTC timer: %d-%02d-%02d %02d:%02d:%02d", rtc.year, rtc.mon, rtc.day, rtc.hour, rtc.min, rtc.sec);
+        }
+        else
+        {
+            LOG_ERROR("Get rtc time failed:%d", result);
+        }
+        return;
+    }
+
 	//forward AT command to modem
 	if (strstr(buf, "AT"))
 	{
