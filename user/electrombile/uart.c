@@ -53,6 +53,14 @@ void event_uart_ready_rd(EatEvent_st* event)
 		return;
 	}
 
+    if (strstr(buf, "imei"))
+    {
+        u8 imei[16] = {0};
+        eat_get_imei(imei, 15);
+        LOG_INFO("IMEI = %s", imei);
+        return;
+    }
+
 	//forward AT command to modem
 	if (strstr(buf, "AT"))
 	{
