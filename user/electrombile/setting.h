@@ -35,6 +35,6 @@ typedef struct
 
 extern SETTING setting;
 
-eat_bool SETTING_initial(void);
-eat_bool SETTING_save(void);
+eat_bool setting_initial(void);
+eat_bool setting_save(void);
 #endif /* USER_ELECTROMBILE_SETTING_H_ */
