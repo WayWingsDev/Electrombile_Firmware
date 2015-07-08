@@ -11,9 +11,9 @@
 #include "timer.h"
 #include "watchdog.h"
 #include "msg.h"
-#include "eat_socket.h"
 #include "log.h"
 #include "uart.h"
+#include "socket.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -28,13 +28,8 @@ typedef struct
  */
 int event_timer(const EatEvent_st* event);
 int event_threadMsg(const EatEvent_st* event);
-static void socket_init(void);
 void event_mod_ready_rd(EatEvent_st* event);
 
-void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4]);
-void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size);;
-
-static s8 socket_id = 0;
 static EVENT_PROC msgProcs[] =
 {
 		{EAT_EVENT_TIMER,				event_timer},
@@ -45,147 +40,6 @@ static EVENT_PROC msgProcs[] =
 		{EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
 		{EAT_EVENT_USER_MSG,            event_threadMsg},
 };
-
-u8 *SOC_EVENT[]={
-    "SOC_READ",
-    "SOC_WRITE",  
-    "SOC_ACCEPT", 
-    "SOC_CONNECT",
-    "SOC_CLOSE", 
-    "SOC_ACKED"
-};
-static void socket_init(void)
-{
-	s8 rc = eat_gprs_bearer_open("CMNET",NULL,NULL,bear_notify_cb);
-
-	if (rc == CBM_OK)
-	{
-		rc = eat_gprs_bearer_hold();
-		if (rc != CBM_OK)
-		{
-			eat_trace("[%s] hold bearer failed", __FUNCTION__);
-		}
-	}
-	else if (rc == CBM_WOULDBLOCK)
-	{
-		eat_trace("[%s] opening bearer...", __FUNCTION__);
-	}
-	else
-	{
-		eat_trace("[%s] open bearer failed", __FUNCTION__);
-		//TODO: reboot
-	}
-}
-void bear_notify_cb(cbm_bearer_state_enum state,u8 ip_addr[4])
-{
-	s8 rc = 0;
-	eat_bool val = EAT_TRUE;
-	sockaddr_struct address={SOC_SOCK_STREAM};
-
-	eat_trace("[%s] BEAR_NOTIFY: %d", __FUNCTION__, state);
-
-	if (state & CBM_ACTIVATED)
-	{
-		eat_trace("[%s] ip: %d.%d.%d.%d", __FUNCTION__, ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3]);
-
-        eat_soc_notify_register(soc_notify_cb);
-        socket_id = eat_soc_create(SOC_SOCK_STREAM,0);
-        if (socket_id < 0)
-        {
-    		eat_trace("[%s] eat_soc_create return error :%d", __FUNCTION__, socket_id);
-    		//TODO: error handle
-    		return;
-        }
-
-        rc = eat_soc_setsockopt(socket_id, SOC_NBIO, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-        	eat_trace("[%s] eat_soc_setsockopt set SOC_NBIO failed: %d", __FUNCTION__, rc);
-        	//TODO: error handle
-        	return;
-        }
-
-        rc = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-			eat_trace("[%s] eat_soc_setsockopt set SOC_NODELAY failed: %d", __FUNCTION__, rc);
-        }
-
-        val = SOC_READ | SOC_WRITE | SOC_CLOSE | SOC_CONNECT;
-        rc = eat_soc_setsockopt(socket_id, SOC_ASYNC, &val, sizeof(val));
-        if (rc != SOC_SUCCESS)
-        {
-        	eat_trace("[%s] eat_soc_setsockopt set SOC_ASYNC failed: %d", __FUNCTION__, rc);
-        	//TODO: error handle
-        	return;
-        }
-
-        address.sock_type = SOC_SOCK_STREAM;
-        address.addr_len = 4;
-        address.port = 43210;                /* TCP server port */
-        address.addr[0]=120;                /* TCP server ip address */
-        address.addr[1]=25;
-        address.addr[2]=157;
-        address.addr[3]=233;
-
-        rc = eat_soc_connect(socket_id, &address);
-        if(rc >= 0)
-        {
-        	eat_trace("NEW Connection ID is :%d", rc);
-        }
-        else if (rc == SOC_WOULDBLOCK)
-        {
-        	eat_trace("Connection is in progressing");
-        }
-        else
-        {
-        	eat_trace("Connect return error:%d", rc);
-        }
-	}
-}
-void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
-{
-    u8 buffer[128] = {0};
-    u8 id = 0;
-    if(event&SOC_READ) {
-    	id = 0;
-        socket_id = s;
-    }
-    else if (event&SOC_WRITE) id = 1;
-    else if (event&SOC_ACCEPT) id = 2;
-    else if (event&SOC_CONNECT) id = 3;
-    else if (event&SOC_CLOSE){ id = 4;
-        eat_soc_close(s);
-    }
-    else if (event&SOC_ACKED) id = 5;
-    if (id == 5)
-        sprintf(buffer,"SOC_NOTIFY:%d,%s,%d\r\n",s,SOC_EVENT[id],ack_size);
-    else 
-        sprintf(buffer,"SOC_NOTIFY:%d,%s,%d\r\n",s,SOC_EVENT[id],result);
-    eat_uart_write(EAT_UART_1,buffer,strlen(buffer));
-
-    if(SOC_ACCEPT==event){
-        u8 val = 0;
-        s8 ret = 0;
-        sockaddr_struct clientAddr={0};
-        s8 newsocket = eat_soc_accept(s,&clientAddr);
-        if (newsocket < 0){
-            eat_trace("eat_soc_accept return error :%d",newsocket);
-        }
-        else{
-            sprintf(buffer,"client accept:%s,%d:%d:%d:%d\r\n",clientAddr.addr[0],clientAddr.addr[1],clientAddr.addr[2],clientAddr.addr[3]);
-        }
-
-        val = TRUE;
-        ret = eat_soc_setsockopt(socket_id, SOC_NODELAY, &val, sizeof(val));
-        if (ret != SOC_SUCCESS)
-            eat_trace("eat_soc_setsockopt SOC_NODELAY return error :%d",ret);
-
-    }
-
-    eat_trace("soc_notify_cb");
-
-}
 
 
 void event_mod_ready_rd(EatEvent_st* event)
@@ -271,9 +125,10 @@ int event_threadMsg(const EatEvent_st* event)
 	case CMD_SMS:
 		LOG_DEBUG("receive thread command CMD_SMS");
 		break;
-       case CMD_VIBRATE:
-              LOG_DEBUG("receive thread command CMD_VIBRATE");              
-              break;
+
+	case CMD_VIBRATE:
+		LOG_DEBUG("receive thread command CMD_VIBRATE");
+		break;
 	default:
 		LOG_ERROR("unknown thread command:%d", msg->cmd);
 	}
