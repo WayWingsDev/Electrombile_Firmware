@@ -12,6 +12,6 @@
 
 void event_uart_ready_rd(EatEvent_st* event);
 
-
+void print(const char* fmt, ...);
 
 #endif /* USER_ELECTROMBILE_UART_H_ */

@@ -4,6 +4,8 @@
  *  Created on: 2015Äê7ÔÂ8ÈÕ
  *      Author: jk
  */
+#include <stdio.h>
+#include <stdarg.h>
 
 #include <eat_interface.h>
 #include <eat_uart.h>
@@ -82,4 +84,19 @@ void event_uart_ready_rd(EatEvent_st* event)
 		eat_modem_write(buf, length);
 		return;
 	}
+}
+
+void print(const char* fmt, ...)
+{
+    char buf[1024] = {0};
+    int length = 0;
+
+    va_list arg;
+    va_start (arg, fmt);
+    snprintf(buf, 1024, fmt, arg);
+    va_end (arg);
+
+    length = strlen(buf);
+
+    eat_uart_write(EAT_UART_1, buf, length);
 }
