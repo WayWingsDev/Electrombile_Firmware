@@ -19,7 +19,7 @@ static s8 socket_id = 0;
 static eat_bool connected = EAT_FALSE;
 
 #define DESC_DEF(x)	case x:\
-							return #x
+                        return #x
 
 /*
 SOC_READ    = 0x01,   Notify for read
@@ -30,7 +30,7 @@ SOC_CLOSE   = 0x10,    Notify for close
 SOC_ACKED   = 0x20   Notify for acked
 */
 
-char* getEventDescription(soc_event_enum event)
+static char* getEventDescription(soc_event_enum event)
 {
 	switch (event)
 	{
@@ -60,7 +60,7 @@ CBM_NWK_NEG_QOS_MODIFY      = 0x040,  negotiated network qos modify notification
 CBM_WIFI_STA_INFO_MODIFY
 */
 
-char* getStateDescription(cbm_bearer_state_enum state)
+static char* getStateDescription(cbm_bearer_state_enum state)
 {
 	switch (state)
 	{
