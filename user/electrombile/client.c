@@ -40,9 +40,10 @@ static void print_hex(const char* data, int length)
 {
     int i = 0, j = 0;
 
+    print("   ");
     for (i  = 0; i < 16; i++)
     {
-        print("    %X  ", i);
+        print("%X ", i);
     }
     print("    ");
     for (i = 0; i < 16; i++)
@@ -50,7 +51,7 @@ static void print_hex(const char* data, int length)
         print("%X", i);
     }
 
-    print("\n");
+    print("\r\n");
 
     for (i = 0; i < length; i += 16)
     {
@@ -65,7 +66,13 @@ static void print_hex(const char* data, int length)
             print("%c ", data[j] & 0xff);
         }
 
-        print("\n");
+        print("\r\n");
+    }
+
+    print("%02d  ", length % 16 + 1);
+    for (; j < length; j++)
+    {
+        print("%c ", data[j] & 0xff);
     }
 }
 
