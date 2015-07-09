@@ -139,7 +139,6 @@ void app_main(void *data)
     		for (i = 0; i < event_num; i++)
     		{
     			eat_get_event(&event);
-    	        LOG_DEBUG("event id:%x", event.event);
 
     	        event_proc(&event);
     		}
