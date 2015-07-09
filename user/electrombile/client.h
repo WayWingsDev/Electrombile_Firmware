@@ -10,6 +10,7 @@
 
 
 int client_proc(const void* m, int msgLen);
+int client_loop();
 
 
 #endif /* USER_ELECTROMBILE_CLIENT_H_ */

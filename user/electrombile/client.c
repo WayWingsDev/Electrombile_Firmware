@@ -12,6 +12,7 @@
 #include "msg.h"
 #include "log.h"
 #include "uart.h"
+#include "data.h"
 
 
 typedef int (*MSG_PROC)(const void* msg);
@@ -35,6 +36,9 @@ static MC_MSG_PROC msgProcs[] =
         {CMD_ALARM, mc_alarm_rsp},
         {CMD_SMS,   mc_sms},
 };
+
+static eat_bool logined = EAT_FALSE;
+
 
 static void print_hex(const char* data, int length)
 {
@@ -115,6 +119,42 @@ int client_proc(const void* m, int msgLen)
 
     LOG_ERROR("unknown message %d", msg->cmd);
     return -1;
+}
+
+int client_loop()
+{
+    if (socket_conneted())
+    {
+        if (logined)
+        {
+            MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
+
+            if (!msg)
+            {
+                LOG_ERROR("alloc message failed");
+            }
+
+            msg->gps = data.gps;
+            socket_sendData(msg, sizeof(MSG_GPS));
+        }
+        else
+        {
+            MSG_LOGIN_REQ* msg = alloc_msg(CMD_LOGIN, sizeof(MSG_LOGIN_REQ));
+            u8 imei[16] = {0};
+
+            eat_get_imei(imei, 15);
+
+            if (!msg)
+            {
+                LOG_ERROR("alloc message failed");
+            }
+
+            memcpy(msg->IMEI, imei, 16);
+            socket_sendData(msg, sizeof(MSG_GPS));
+        }
+
+    }
+
 }
 
 static int mc_login_rsp(const void* msg)

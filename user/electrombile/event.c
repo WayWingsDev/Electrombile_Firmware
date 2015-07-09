@@ -17,6 +17,7 @@
 #include "setting.h"
 #include "msg.h"
 #include "data.h"
+#include "client.h"
 
 typedef int (*EVENT_FUNC)(const EatEvent_st* event);
 typedef struct
@@ -133,27 +134,10 @@ int event_timer(const EatEvent_st* event)
             break;
 
         case TIMER_GPS_SEND:
-        {
-            MSG_GPS* msg = 0;
             LOG_INFO("TIMER_GPS_SEND expire!");
             eat_timer_start(event->data.timer.timer_id, setting.gps_timer_period);
-
-            if (socket_conneted())
-            {
-                msg =alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-
-                if (msg)
-                {
-                    socket_sendData(msg, sizeof(MSG_GPS));
-                }
-                else
-                {
-                    LOG_ERROR("alloc message failed");
-                }
-            }
-
+            client_loop();
             break;
-        }
 
         default:
             LOG_ERROR ("timer(%d) not processed", event->data.timer.timer_id);
