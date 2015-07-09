@@ -32,16 +32,43 @@ void event_mod_ready_rd(EatEvent_st* event);
 
 static EVENT_PROC msgProcs[] =
 {
-		{EAT_EVENT_TIMER,				event_timer},
-		{EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
-		{EAT_EVENT_MDM_READY_WR,        EAT_NULL},
-		{EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
-		{EAT_EVENT_UART_READY_WR,		EAT_NULL},
-		{EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
-		{EAT_EVENT_USER_MSG,            event_threadMsg},
+    {EAT_EVENT_TIMER,				event_timer},
+    {EAT_EVENT_MDM_READY_RD,        event_mod_ready_rd},
+    {EAT_EVENT_MDM_READY_WR,        EAT_NULL},
+    {EAT_EVENT_UART_READY_RD,       event_uart_ready_rd},
+    {EAT_EVENT_UART_READY_WR,		EAT_NULL},
+    {EAT_EVENT_UART_SEND_COMPLETE,	EAT_NULL},
+    {EAT_EVENT_USER_MSG,            event_threadMsg},
 };
 
 
+#define DESC_DEF(x) case x:\
+                            return #x
+
+static char* getEventDescription(EatEvent_enum event)
+{
+    switch (event)
+    {
+        DESC_DEF(EAT_EVENT_TIMER);
+        DESC_DEF(EAT_EVENT_KEY);
+        DESC_DEF(EAT_EVENT_INT);
+        DESC_DEF(EAT_EVENT_MDM_READY_RD);
+        DESC_DEF(EAT_EVENT_MDM_READY_WR);
+        DESC_DEF(EAT_EVENT_MDM_RI);
+        DESC_DEF(EAT_EVENT_UART_READY_RD);
+        DESC_DEF(EAT_EVENT_UART_READY_WR);
+        DESC_DEF(EAT_EVENT_ADC);
+        DESC_DEF(EAT_EVENT_UART_SEND_COMPLETE);
+        DESC_DEF(EAT_EVENT_USER_MSG);
+        DESC_DEF(EAT_EVENT_IME_KEY);
+        default:
+        {
+            static char soc_event[10] = {0};
+            sprintf(soc_event, "%d", event);
+            return soc_event;
+        }
+    }
+}
 void event_mod_ready_rd(EatEvent_st* event)
 {
 	u8 buf[256] = {0};
@@ -64,6 +91,9 @@ void event_mod_ready_rd(EatEvent_st* event)
 int event_proc(EatEvent_st* event)
 {
 	int i = 0;
+
+    LOG_DEBUG("event: %s", getEventDescription(event->event));
+
 	for (i = 0; i < sizeof(msgProcs) / sizeof(msgProcs[0]); i++)
 	{
 		if (msgProcs[i].event == event->event)
