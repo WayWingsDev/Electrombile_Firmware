@@ -16,7 +16,7 @@ static long data_x2y2z2[10];
 static int vibration_data_i=0;
 #define VIBRATION_TRESHOLD 100000000
 
-static eat_bool vibration_sendMsg2Main(MSG* msg, u8 len);
+static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len);
 static eat_bool vibration_sendAlarm();
 static void vibration_timer_handler();
 
@@ -130,19 +130,19 @@ static void vibration_timer_handler()
 	}
 	
 }
-static eat_bool vibration_sendMsg2Main(MSG* msg, u8 len)
+static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len)
 {
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
 }
 
 static eat_bool vibration_sendAlarm()
 {
-    u8 msgLen = sizeof(MSG) + sizeof(MSG_VIBRATE);
-    MSG* msg = allocMsg(msgLen);
-    MSG_VIBRATE* vibrate = (MSG_VIBRATE*)msg->data;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(VIBRATE);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    VIBRATE* vibrate = (VIBRATE*)msg->data;
 
-    msg->cmd = CMD_VIBRATE;
-    msg->length = sizeof(MSG_VIBRATE);
+    msg->cmd = CMD_THREAD_VIBRATE;
+    msg->length = sizeof(VIBRATE);
 
     vibrate->isVibrate = EAT_TRUE;
     eat_trace("isVibrate=%d",vibrate->isVibrate);

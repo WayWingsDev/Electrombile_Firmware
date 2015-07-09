@@ -63,6 +63,19 @@ void event_uart_ready_rd(EatEvent_st* event)
         return;
     }
 
+    if (strstr(buf, "print"))
+    {
+        int i;
+
+        print("test\n");
+        print("%d", 1234);
+        for (i  = 0; i < 16; i++)
+        {
+            print("    %x  ", i);
+        }
+        return;
+    }
+
     if (strstr(buf, "rtc"))
     {
         EatRtc_st rtc = {0};

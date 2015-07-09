@@ -37,8 +37,8 @@ typedef struct
 {
     short signature;
     char cmd;
-    unsigned short length;
     unsigned short seq;
+    unsigned short length;
 }__attribute__((__packed__)) MSG_HEADER;
 
 #define MSG_HEADER_LEN sizeof(MSG_HEADER)

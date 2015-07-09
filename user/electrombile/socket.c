@@ -13,6 +13,7 @@
 #include "setting.h"
 #include "log.h"
 #include "client.h"
+#include "msg.h"
 
 static s8 socket_id = 0;
 
@@ -251,38 +252,40 @@ void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 
 void socket_init(void)
 {
-	s8 rc = eat_gprs_bearer_open("CMNET",NULL,NULL,bear_notify_cb);
+    s8 rc = eat_gprs_bearer_open("CMNET", NULL, NULL, bear_notify_cb);
 
-	if (rc == CBM_OK)
-	{
-		rc = eat_gprs_bearer_hold();
-		if (rc != CBM_OK)
-		{
-			LOG_ERROR("hold bearer failed");
-		}
-	}
-	else if (rc == CBM_WOULDBLOCK)
-	{
-		LOG_ERROR("opening bearer...");
-	}
-	else
-	{
-		LOG_ERROR("open bearer failed");
-		//TODO: reboot
-	}
+    if (rc == CBM_OK)
+    {
+        rc = eat_gprs_bearer_hold();
+        if (rc != CBM_OK)
+        {
+            LOG_ERROR("hold bearer failed");
+        }
+    }
+    else if (rc == CBM_WOULDBLOCK)
+    {
+        LOG_ERROR("opening bearer...");
+    }
+    else
+    {
+        LOG_ERROR("open bearer failed");
+        //TODO: reboot
+    }
 }
 
 s32 socket_sendData(const void* data, s32 len)
 {
-	s32 rc = eat_soc_send(socket_id, data, len);
-	if (rc >= 0)
-	{
-		LOG_DEBUG("socket send data successful");
-	}
-	else
-	{
-		LOG_ERROR("sokcet send data failed:%d", rc);
-	}
+    s32 rc = eat_soc_send(socket_id, data, len);
+    if (rc >= 0)
+    {
+        LOG_DEBUG("socket send data successful");
+    }
+    else
+    {
+        LOG_ERROR("sokcet send data failed:%d", rc);
+    }
 
-	return rc;
+    freeMsg(data);  //TODO: is it ok to free the msg here???
+
+    return rc;
 }

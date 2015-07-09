@@ -6,9 +6,12 @@
  */
 #include <stdio.h>
 
+#include <eat_interface.h>
+
 #include "client.h"
 #include "msg.h"
 #include "log.h"
+#include "uart.h"
 
 
 typedef int (*MSG_PROC)(const void* msg);
@@ -33,10 +36,45 @@ static MC_MSG_PROC msgProcs[] =
         {CMD_SMS,   mc_sms},
 };
 
+static void print_hex(const char* data, int length)
+{
+    int i = 0, j = 0;
+
+    for (i  = 0; i < 16; i++)
+    {
+        print("    %X  ", i);
+    }
+    print("    ");
+    for (i = 0; i < 16; i++)
+    {
+        print("%X", i);
+    }
+
+    print("\n");
+
+    for (i = 0; i < length; i += 16)
+    {
+        print("%02d  ", i % 16 + 1);
+        for (j = i; j < 16 && j < length; j++)
+        {
+            print("%02x ", data[j] & 0xff);
+        }
+        print("    ");
+        for (j = i; j < 16 && j < length; j++)
+        {
+            print("%c ", data[j] & 0xff);
+        }
+
+        print("\n");
+    }
+}
+
 int client_proc(const void* m, int msgLen)
 {
     MSG_HEADER* msg = (MSG_HEADER*)m;
     size_t i = 0;
+
+    print_hex(m, msgLen);
 
     if (msgLen < sizeof(MSG_HEADER))
     {
@@ -60,11 +98,15 @@ int client_proc(const void* m, int msgLen)
             {
                 return pfn(msg);
             }
+            else
+            {
+                LOG_ERROR("Message %d not processed", msg->cmd);
+                return -1;
+            }
         }
     }
 
-    LOG_ERROR("Message %d not processed", msg->cmd);
-
+    LOG_ERROR("unknown message %d", msg->cmd);
     return -1;
 }
 

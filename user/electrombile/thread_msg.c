@@ -4,12 +4,12 @@
 
 #include "thread_msg.h"
 
-MSG* allocMsg(u8 len)
+MSG_THREAD* allocMsg(u8 len)
 {
     return eat_mem_alloc(len);
 }
 
-void freeMsg(MSG* msg)
+void freeMsg(MSG_THREAD* msg)
 {
     eat_mem_free(msg);
 }

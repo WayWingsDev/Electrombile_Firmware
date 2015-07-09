@@ -9,7 +9,7 @@
 
 #include "msg.h"
 
-
+static unsigned short seq = 0;
 
 void* alloc_msg(char cmd, size_t length)
 {
@@ -17,9 +17,10 @@ void* alloc_msg(char cmd, size_t length)
 
     if (msg)
     {
-        fill_msg_header(msg);
-        set_msg_cmd(msg, cmd);
-        set_msg_len(msg, length - MSG_HEADER_LEN);
+        msg->signature = START_FLAG;
+        msg->cmd = cmd;
+        msg->seq = seq++;
+        msg->length = length - MSG_HEADER_LEN;
     }
 
     return msg;

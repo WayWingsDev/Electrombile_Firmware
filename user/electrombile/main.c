@@ -129,7 +129,10 @@ void app_main(void *data)
     setting_initial();
     startWatchdog();
     eat_timer_start(TIMER_WATCHDOG, 50000);
-    eat_timer_start(TIMER_AT_CMD,5000);
+    eat_timer_start(TIMER_AT_CMD, 5000);
+    eat_timer_start(TIMER_GPS_SEND, setting.gps_timer_period);
+
+
     while(EAT_TRUE)
     {
     	unsigned int event_num = eat_get_event_num();

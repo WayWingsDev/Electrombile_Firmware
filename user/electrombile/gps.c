@@ -17,6 +17,7 @@
 #include "thread_msg.h"
 #include "log.h"
 #include "setting.h"
+#include "protocol.h"
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
@@ -95,18 +96,18 @@ static void gps_timer_handler()
 	gps_sendGPS(lat,lon);
 }
 
-static eat_bool gps_sendMsg2Main(MSG* msg, u8 len)
+static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
 {
     return sendMsg(THREAD_GPS, THREAD_MAIN, msg, len);
 }
 
 static eat_bool gps_sendGPS(double lat,double lng)
 {
-    u8 msgLen = sizeof(MSG) + sizeof(MSG_GPS);
-    MSG* msg = allocMsg(msgLen);
-    MSG_GPS* gps = (MSG_GPS*)msg->data;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
+    MSG_THREAD* msg = allocMsg(msgLen);
+    GPS* gps = (GPS*)msg->data;
 
-    msg->cmd = CMD_GPS_UPDATE;
+    msg->cmd = CMD_THREAD_GPS;
     msg->length = sizeof(MSG_GPS);
     
     gps->latitude = lat;
