@@ -12,6 +12,7 @@
 #include "socket.h"
 #include "setting.h"
 #include "log.h"
+#include "client.h"
 
 static s8 socket_id = 0;
 
@@ -105,11 +106,23 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
     switch (event)
     {
     case SOC_READ:
-    	socket_id = s;		//TODO: according to the demo, but why?
+        socket_id = s;		//TODO: according to the demo, but why?
 
-    	rc = eat_soc_recv(socket_id, buffer, 128);
-    	LOG_DEBUG("socket recv: %s", buffer);
-    	break;
+        rc = eat_soc_recv(socket_id, buffer, 128);
+        if (rc == SOC_WOULDBLOCK)
+        {
+            LOG_ERROR("read data from socket block");
+        }
+        else if (rc > 0)
+        {
+            client_proc(buffer, rc);
+        }
+        else
+        {
+            LOG_ERROR("eat_soc_recv error:rc=%d", rc);
+        }
+
+        break;
 
     case SOC_CONNECT:
     	LOG_DEBUG("result of CONNECT:%d", result);
