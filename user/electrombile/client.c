@@ -136,6 +136,7 @@ int client_loop(void)
 
             msg->gps = data.gps;
             socket_sendData(msg, sizeof(MSG_GPS));
+            LOG_DEBUG("send GPS message");
         }
         else
         {
@@ -150,7 +151,8 @@ int client_loop(void)
             }
 
             memcpy(msg->IMEI, imei, 16);
-            socket_sendData(msg, sizeof(MSG_GPS));
+            socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
+            LOG_DEBUG("send login message");
         }
 
     }
