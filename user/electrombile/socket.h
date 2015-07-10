@@ -13,6 +13,5 @@ void socket_init(void);
 
 s32 socket_sendData(void* data, s32 len);
 
-eat_bool socket_conneted();
 
 #endif /* USER_ELECTROMBILE_SOCKET_H_ */

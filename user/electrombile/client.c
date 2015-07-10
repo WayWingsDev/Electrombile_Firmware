@@ -5,10 +5,12 @@
  *      Author: jk
  */
 #include <stdio.h>
+#include <string.h>
 
 #include <eat_interface.h>
 
 #include "client.h"
+#include "socket.h"
 #include "msg.h"
 #include "log.h"
 #include "uart.h"
@@ -36,8 +38,6 @@ static MC_MSG_PROC msgProcs[] =
         {CMD_ALARM, mc_alarm_rsp},
         {CMD_SMS,   mc_sms},
 };
-
-static eat_bool logined = EAT_FALSE;
 
 
 static void print_hex(const char* data, int length)
@@ -121,11 +121,11 @@ int client_proc(const void* m, int msgLen)
     return -1;
 }
 
-int client_loop()
+int client_loop(void)
 {
     if (socket_conneted())
     {
-        if (logined)
+        if (client_logined())
         {
             MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
 
@@ -159,6 +159,8 @@ int client_loop()
 
 static int mc_login_rsp(const void* msg)
 {
+    set_client_state(EAT_TRUE);
+
     return 0;
 }
 

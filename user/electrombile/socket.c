@@ -17,9 +17,6 @@
 
 static s8 socket_id = 0;
 
-
-static eat_bool connected = EAT_FALSE;
-
 #define DESC_DEF(x)	case x:\
                         return #x
 
@@ -83,10 +80,6 @@ static char* getStateDescription(cbm_bearer_state_enum state)
 	}
 }
 
-eat_bool socket_conneted()
-{
-    return connected;
-}
 
 
 void hostname_notify_cb(u32 request_id,eat_bool result,u8 ip_addr[4])
@@ -106,40 +99,40 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 
     switch (event)
     {
-    case SOC_READ:
-        socket_id = s;		//TODO: according to the demo, but why?
+        case SOC_READ:
+            socket_id = s;		//TODO: according to the demo, but why?
 
-        rc = eat_soc_recv(socket_id, buffer, 128);
-        if (rc == SOC_WOULDBLOCK)
-        {
-            LOG_ERROR("read data from socket block");
-        }
-        else if (rc > 0)
-        {
-            client_proc(buffer, rc);
-        }
-        else
-        {
-            LOG_ERROR("eat_soc_recv error:rc=%d", rc);
-        }
+            rc = eat_soc_recv(socket_id, buffer, 128);
+            if (rc == SOC_WOULDBLOCK)
+            {
+                LOG_ERROR("read data from socket block");
+            }
+            else if (rc > 0)
+            {
+                client_proc(buffer, rc);
+            }
+            else
+            {
+                LOG_ERROR("eat_soc_recv error:rc=%d", rc);
+            }
 
-        break;
+            break;
 
-    case SOC_CONNECT:
-    	LOG_DEBUG("result of CONNECT:%d", result);
-    	connected = EAT_TRUE;
-    	break;
-    case SOC_CLOSE:
-    	eat_soc_close(s);
-        connected = EAT_FALSE;
-    	break;
+        case SOC_CONNECT:
+            LOG_DEBUG("result of CONNECT:%d", result);
+            set_socket_state(EAT_TRUE);
+            break;
+        case SOC_CLOSE:
+            eat_soc_close(s);
+            set_socket_state(EAT_FALSE);
+            break;
 
-    case SOC_ACKED:
-    	LOG_DEBUG("acked size of send data: %d", ack_size);
-    	break;
+        case SOC_ACKED:
+            LOG_DEBUG("acked size of send data: %d", ack_size);
+            break;
 
-    default:
-    	break;
+        default:
+            break;
     }
 
 }
