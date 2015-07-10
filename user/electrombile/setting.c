@@ -22,7 +22,7 @@ SETTING setting =
 		{
 				"server.xiaoan110.com",
 		},
-		9876,
+		9877,
 		30 * 1000,
 		100,
 };
