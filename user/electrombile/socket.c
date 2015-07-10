@@ -125,6 +125,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
         case SOC_CLOSE:
             eat_soc_close(s);
             set_socket_state(EAT_FALSE);
+            set_client_state(EAT_FALSE);
             break;
 
         case SOC_ACKED:
