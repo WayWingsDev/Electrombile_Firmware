@@ -94,7 +94,7 @@ int client_proc(const void* m, int msgLen)
         return -1;
     }
 
-    if (msg->signature != htons(START_FLAG))
+    if (msg->signature != ntohs(START_FLAG))
     {
         LOG_ERROR("receive message head signature error:%d", msg->signature);
         return -1;
