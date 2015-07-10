@@ -12,9 +12,19 @@
 
 #include "protocol.h"
 
+#define htonl(l) ((((l >> 24) & 0x000000ff)) | \
+                  (((l >>  8) & 0x0000ff00)) | \
+                  (((h) & 0x0000ff00) <<  8) | \
+                  (((h) & 0x000000ff) << 24))
+#define ntohl(l) htonl(l)
+
+#define htons(s) ((((s) >> 8) & 0xff) | \
+                  (((s) << 8) & 0xff00))
+#define ntohs(s) htons(s)
+
 void* alloc_msg(char cmd, size_t length);
 void* alloc_rspMsg(const MSG_HEADER* pMsg);
 
-void free_msg(MSG_HEADER* msg);
+void free_msg(void* msg);
 
 #endif /* USER_ELECTROMBILE_MSG_H_ */

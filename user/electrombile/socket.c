@@ -273,7 +273,7 @@ void socket_init(void)
     }
 }
 
-s32 socket_sendData(const void* data, s32 len)
+s32 socket_sendData(void* data, s32 len)
 {
     s32 rc = eat_soc_send(socket_id, data, len);
     if (rc >= 0)
@@ -285,7 +285,7 @@ s32 socket_sendData(const void* data, s32 len)
         LOG_ERROR("sokcet send data failed:%d", rc);
     }
 
-    freeMsg(data);  //TODO: is it ok to free the msg here???
+    free_msg(data);  //TODO: is it ok to free the msg here???
 
     return rc;
 }

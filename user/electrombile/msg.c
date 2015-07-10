@@ -17,10 +17,10 @@ void* alloc_msg(char cmd, size_t length)
 
     if (msg)
     {
-        msg->signature = START_FLAG;
+        msg->signature = htons(START_FLAG);
         msg->cmd = cmd;
-        msg->seq = seq++;
-        msg->length = length - MSG_HEADER_LEN;
+        msg->seq = htons(seq++);
+        msg->length = htons(length - MSG_HEADER_LEN);
     }
 
     return msg;
@@ -33,11 +33,11 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
     switch (pMsg->cmd)
     {
     case CMD_LOGIN:
-        msgLen = sizeof(MSG_LOGIN_RSP);
+        msgLen = htons(sizeof(MSG_LOGIN_RSP));
         break;
 
     case CMD_PING:
-        msgLen = sizeof(MSG_PING_RSP);
+        msgLen = htons(sizeof(MSG_PING_RSP));
         break;
 
     default:
@@ -45,16 +45,16 @@ void* alloc_rspMsg(const MSG_HEADER* pMsg)
     }
 
     msg = eat_mem_alloc(msgLen);
-    msg->signature = START_FLAG;
+    msg->signature = htons(START_FLAG);
     msg->cmd = pMsg->cmd;
-    msg->length = msgLen - MSG_HEADER_LEN;
-    msg->seq = pMsg->seq;
+    msg->length = htons(msgLen - MSG_HEADER_LEN);
+    msg->seq = htons(pMsg->seq);
 
     return msg;
 }
 
 
-void free_msg(MSG_HEADER* msg)
+void free_msg(void* msg)
 {
     eat_mem_free(msg);
 }
