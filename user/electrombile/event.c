@@ -165,6 +165,8 @@ int event_threadMsg(const EatEvent_st* event)
             //update the local GPS data
             data.gps = *gps;
 
+            freeMsg(msg);
+
             break;
         }
 
