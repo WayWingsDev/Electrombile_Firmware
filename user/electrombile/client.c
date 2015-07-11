@@ -44,10 +44,10 @@ static void print_hex(const char* data, int length)
 {
     int i = 0, j = 0;
 
-    print("   ");
+    print("    ");
     for (i  = 0; i < 16; i++)
     {
-        print("%X ", i);
+        print("%X  ", i);
     }
     print("    ");
     for (i = 0; i < 16; i++)
@@ -64,19 +64,27 @@ static void print_hex(const char* data, int length)
         {
             print("%02x ", data[j] & 0xff);
         }
+        if (j >= length)
+        {
+            for (j = 0; j < (16 - length % 16); j++)
+            {
+                print("   ");
+            }
+        }
         print("    ");
         for (j = i; j < 16 && j < length; j++)
         {
-            print("%c ", data[j] & 0xff);
+            if (data[j] < 32)
+            {
+                print(".");
+            }
+            else
+            {
+                print("%c", data[j] & 0xff);
+            }
         }
 
         print("\r\n");
-    }
-
-    print("%02d  ", length % 16 + 1);
-    for (; j < length; j++)
-    {
-        print("%c ", data[j] & 0xff);
     }
 }
 
@@ -94,7 +102,7 @@ int client_proc(const void* m, int msgLen)
         return -1;
     }
 
-    if (msg->signature != htons(START_FLAG))
+    if (msg->signature != ntohs(START_FLAG))
     {
         LOG_ERROR("receive message head signature error:%d", msg->signature);
         return -1;
@@ -136,6 +144,7 @@ int client_loop(void)
 
             msg->gps = data.gps;
             socket_sendData(msg, sizeof(MSG_GPS));
+            LOG_DEBUG("send GPS message");
         }
         else
         {
@@ -150,7 +159,8 @@ int client_loop(void)
             }
 
             memcpy(msg->IMEI, imei, 16);
-            socket_sendData(msg, sizeof(MSG_GPS));
+            socket_sendData(msg, sizeof(MSG_LOGIN_REQ));
+            LOG_DEBUG("send login message");
         }
 
     }

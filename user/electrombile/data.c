@@ -29,7 +29,7 @@ void set_socket_state(eat_bool connected)
 
 eat_bool client_logined(void)
 {
-    return data.connected;
+    return data.logined;
 }
 
 void set_client_state(eat_bool logined)

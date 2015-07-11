@@ -46,7 +46,7 @@ void app_gps_thread(void *data)
                 switch ( event.data.timer.timer_id )
                 {
                     case TIMER_GPS:
-                    	LOG_INFO("IMER_GPS expire!");
+                    	LOG_INFO("TIMER_GPS expire!");
                         gps_timer_handler();
                         eat_timer_start(event.data.timer.timer_id, setting.gps_timer_period);
                         break;
