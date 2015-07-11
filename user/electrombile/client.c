@@ -25,18 +25,18 @@ typedef struct
 }MC_MSG_PROC;
 
 
-static int mc_login_rsp(const void* msg);
-static int mc_ping_rsp(const void* msg);
-static int mc_alarm_rsp(const void* msg);
-static int mc_sms(const void* msg);
+static int login_rsp(const void* msg);
+static int ping_rsp(const void* msg);
+static int alarm_rsp(const void* msg);
+static int sms(const void* msg);
 
 
 static MC_MSG_PROC msgProcs[] =
 {
-        {CMD_LOGIN, mc_login_rsp},
-        {CMD_PING,  mc_ping_rsp},
-        {CMD_ALARM, mc_alarm_rsp},
-        {CMD_SMS,   mc_sms},
+        {CMD_LOGIN, login_rsp},
+        {CMD_PING,  ping_rsp},
+        {CMD_ALARM, alarm_rsp},
+        {CMD_SMS,   sms},
 };
 
 
@@ -167,24 +167,24 @@ int client_loop(void)
 
 }
 
-static int mc_login_rsp(const void* msg)
+static int login_rsp(const void* msg)
 {
     set_client_state(EAT_TRUE);
 
     return 0;
 }
 
-static int mc_ping_rsp(const void* msg)
+static int ping_rsp(const void* msg)
 {
     return 0;
 }
 
-static int mc_alarm_rsp(const void* msg)
+static int alarm_rsp(const void* msg)
 {
     return 0;
 }
 
-static int mc_sms(const void* msg)
+static int sms(const void* msg)
 {
     return 0;
 }
