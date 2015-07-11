@@ -23,8 +23,17 @@ enum
 /*
  * GPS structure
  */
+ typedef struct
+{
+    short cellid;
+    short lac;
+    double rxl;
+}ENGINEERING_INFORMATION;
+
 typedef struct
 {
+    char gps_fix;
+    ENGINEERING_INFORMATION informatin[7];
     double longitude;
     double latitude;
 }GPS;
