@@ -6,6 +6,7 @@
  */
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <eat_interface.h>
 #include <eat_gps.h>
@@ -23,7 +24,9 @@
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
-static eat_bool gps_sendGPS(double lat,double lng);
+static eat_bool gps_sendGPS(GPS *gps);
+static eat_bool gps_getGps(float* latitude, float* longitude);
+static eat_bool gps_getCells();
 static void geo_fence_proc_cb(char *msg_buf, u8 len);
 
 void app_gps_thread(void *data)
@@ -36,7 +39,7 @@ void app_gps_thread(void *data)
 
     eat_gps_register_msg_proc_callback(geo_fence_proc_cb);
     eat_timer_start(TIMER_GPS, setting.gps_timer_period);
-
+    eat_modem_write("AT+CENG=3,1\r",12);
     while(EAT_TRUE)
     {
         eat_get_event_for_user(THREAD_GPS, &event);
@@ -58,7 +61,6 @@ void app_gps_thread(void *data)
                         break;
                 }
                 break;
-
             default:
             	LOG_ERROR("event(%d) not processed", event.event);
                 break;
@@ -69,31 +71,91 @@ void app_gps_thread(void *data)
 
 static void gps_timer_handler()
 {
-	char * GPSIM_data[9];
-	char *buffer;
-	double lat,lon;
-	char gps_fix;
-	int i;
-	eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
-	LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
+    float latitude = 0.0;
+    float longitude = 0.0;
+    char isGpsFixed = 0;
 
-	buffer = gps_info_buf;
-	for(i=0;i<7;i++)
-	{
-		GPSIM_data[i] = strtok(buffer,",");
-		buffer = NULL;		
-	}
-	lat = atof(GPSIM_data[2]);
-	lon =  atof(GPSIM_data[4]);
-	gps_fix = atoi(GPSIM_data[6]);
-	if(!gps_fix)
-	{
-		LOG_ERROR("GPS not fixed");
-		return;
-	}
-	
-	LOG_DEBUG("lat=%f,lon=%f,fix=%d",lat,lon,gps_fix);
-	gps_sendGPS(lat,lon);
+    isGpsFixed = gps_getGps(&latitude, &longitude);
+
+    if (isGpsFixed)
+    {
+        u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
+        MSG_THREAD* msg = allocMsg(msgLen);
+        GPS* gps = 0;
+
+        LOG_DEBUG("GPS fixed:lat=%f, lng=%f", latitude, longitude);
+
+        if (!msg)
+        {
+            LOG_ERROR("alloc msg failed");
+            return;
+        }
+        msg->cmd = CMD_THREAD_GPS;
+        msg->length = sizeof(GPS);
+
+        gps = (GPS*)msg->data;
+        gps->latitude = latitude;
+        gps->longitude = longitude;
+
+        gps_sendMsg2Main(msg, msgLen);
+        return;
+    }
+    else
+    {
+        gps_getCells();
+    }
+
+//    gps_sendGPS(gps);
+}
+
+static eat_bool gps_getGps(float* latitude, float* longitude)
+{
+    char isGpsFixed = 0;
+
+    /*
+     * NMEA output format:
+     * $GPGGA,003634.000,8960.0000,N,00000.0000,E,0,0,,137.0,M,13.0,M,,
+     * header     utc    Lat       N/S     Lng  E/W (Position Fix Indicator)  (Satellites Used)
+     */
+    eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
+    LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
+
+    sscanf(gps_info_buf + sizeof("$GPGGA"), "%*f,%f,%*c,%f,%*c,%d", latitude, longitude, &isGpsFixed);
+
+    return isGpsFixed;
+}
+
+static eat_bool gps_getCells()
+{
+    u8 buf[256] = {0};
+    u16 len = 0;
+
+    /*
+     * the output format of AT+CENG?
+     * +CENG:<mode>,<Ncell>
+     * +CENG:<cell>,"<arfcn>,<rxl>,<rxq>,<mcc>,<mnc>,<bsic>,<cellid>,<rla>,<txp>,<lac>,<TA>"
+     * +CENG:<cell>,...
+     *
+     * eg:
+     * +CENG: 3,1
+     *
+     * +CENG: 0,"460,00,5001,96bd,23,45"
+     * +CENG: 1,"460,00,5001,96dd,33,21"
+     * +CENG: 2,",,0000,0000,00,00"
+     * +CENG: 3,",,0000,0000,00,00"
+     * +CENG: 4,",,0000,0000,00,00"
+     * +CENG: 5,",,0000,0000,00,00"
+     * +CENG: 6,",,0000,0000,00,00"
+     *
+     */
+    eat_modem_write("AT+CENG?\r", 9);
+    len = eat_modem_read(buf, 128);
+    if (len > 0)
+    {
+        LOG_DEBUG("AT+CENG? return %s", buf);
+    }
+
+    return;
 }
 
 static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
@@ -101,18 +163,18 @@ static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
     return sendMsg(THREAD_GPS, THREAD_MAIN, msg, len);
 }
 
-static eat_bool gps_sendGPS(double lat,double lng)
+static eat_bool gps_sendGPS(GPS *gps)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
+    GPS *gpskk;
     MSG_THREAD* msg = allocMsg(msgLen);
-    GPS* gps = (GPS*)msg->data;
-
+    memcpy(msg->data,gps,sizeof(GPS));
+    eat_mem_free(gps);
+    gpskk = (GPS *)msg->data;
+    
     msg->cmd = CMD_THREAD_GPS;
     msg->length = sizeof(MSG_GPS);
-    
-    gps->latitude = lat;
-    gps->longitude = lng;
-
+    LOG_DEBUG("send gps: lat(%f), lng(%f)", gpskk->latitude, gpskk->longitude);
     return gps_sendMsg2Main(msg, msgLen);
 }
 

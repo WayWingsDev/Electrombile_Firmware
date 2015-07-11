@@ -15,20 +15,44 @@ enum
 {
     CMD_LOGIN   = 0x01,
     CMD_GPS     = 0x02,
-    CMD_PING    = 0x03,
-    CMD_ALARM   = 0x04,
-    CMD_SMS     = 0x05,
+    CMD_CELL    = 0x03,
+    CMD_PING    = 0x04,
+    CMD_ALARM   = 0x05,
+    CMD_SMS     = 0x06,
 };
+
+#pragma pack(push, 1)
 
 /*
  * GPS structure
  */
 typedef struct
 {
-    double longitude;
-    double latitude;
+    float longitude;
+    float latitude;
 }GPS;
-#pragma pack(push, 1)
+
+/*
+ * CELL structure
+ */
+typedef struct
+{
+   short lac;       //local area code
+   short cellid;    //cell id
+   short rxl;       //receive level
+}__attribute__((__packed__)) CELL;
+
+typedef struct
+{
+    short mcc;  //mobile country code
+    short mnc;  //mobile network code
+    char  cellNo;// cell count
+    CELL cell[];
+}__attribute__((__packed__)) CGI;       //Cell Global Identifier
+
+
+
+
 
 /*
  * Message header definition
