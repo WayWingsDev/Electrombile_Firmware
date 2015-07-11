@@ -24,7 +24,7 @@
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
-static eat_bool gps_sendGPS(GPS *gps);
+static eat_bool gps_sendGPS(float latitude, float longitude);
 static eat_bool gps_getGps(float* latitude, float* longitude);
 static eat_bool gps_getCells();
 static void geo_fence_proc_cb(char *msg_buf, u8 len);
@@ -79,25 +79,8 @@ static void gps_timer_handler()
 
     if (isGpsFixed)
     {
-        u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
-        MSG_THREAD* msg = allocMsg(msgLen);
-        GPS* gps = 0;
-
         LOG_DEBUG("GPS fixed:lat=%f, lng=%f", latitude, longitude);
-
-        if (!msg)
-        {
-            LOG_ERROR("alloc msg failed");
-            return;
-        }
-        msg->cmd = CMD_THREAD_GPS;
-        msg->length = sizeof(GPS);
-
-        gps = (GPS*)msg->data;
-        gps->latitude = latitude;
-        gps->longitude = longitude;
-
-        gps_sendMsg2Main(msg, msgLen);
+        gps_sendGPS(latitude, longitude);
         return;
     }
     else
@@ -149,7 +132,7 @@ static eat_bool gps_getCells()
      *
      */
     eat_modem_write("AT+CENG?\r", 9);
-    len = eat_modem_read(buf, 128);
+    len = eat_modem_read(buf, 256);
     if (len > 0)
     {
         LOG_DEBUG("AT+CENG? return %s", buf);
@@ -163,18 +146,28 @@ static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
     return sendMsg(THREAD_GPS, THREAD_MAIN, msg, len);
 }
 
-static eat_bool gps_sendGPS(GPS *gps)
+static eat_bool gps_sendGPS(float latitude, float longitude)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
-    GPS *gpskk;
     MSG_THREAD* msg = allocMsg(msgLen);
-    memcpy(msg->data,gps,sizeof(GPS));
-    eat_mem_free(gps);
-    gpskk = (GPS *)msg->data;
-    
+    GPS* gps = 0;
+
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed");
+        return EAT_FALSE;
+    }
     msg->cmd = CMD_THREAD_GPS;
-    msg->length = sizeof(MSG_GPS);
-    LOG_DEBUG("send gps: lat(%f), lng(%f)", gpskk->latitude, gpskk->longitude);
+    msg->length = sizeof(GPS);
+
+    gps = (GPS*)msg->data;
+    gps->latitude = latitude;
+    gps->longitude = longitude;
+
+    gps_sendMsg2Main(msg, msgLen);
+    
+    LOG_DEBUG("send gps: lat(%f), lng(%f)", latitude, longitude);
     return gps_sendMsg2Main(msg, msgLen);
 }
 
