@@ -14,6 +14,7 @@
 #include "log.h"
 #include "client.h"
 #include "msg.h"
+#include "data.h"
 
 static s8 socket_id = 0;
 
@@ -141,7 +142,7 @@ void soc_notify_cb(s8 s,soc_event_enum event,eat_bool result, u16 ack_size)
 void bear_notify_cb(cbm_bearer_state_enum state, u8 ip_addr[4])
 {
 	s8 rc = 0;
-	eat_bool val = EAT_TRUE;
+	s8 val = EAT_TRUE;
 	sockaddr_struct address={SOC_SOCK_STREAM};
 
 	LOG_INFO("BEAR_NOTIFY: %s", getStateDescription(state));

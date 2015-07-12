@@ -129,7 +129,7 @@ int client_proc(const void* m, int msgLen)
     return -1;
 }
 
-int client_loop(void)
+void client_loop(void)
 {
     if (socket_conneted())
     {

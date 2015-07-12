@@ -1,6 +1,8 @@
 //
 // Created by jk on 2015/7/1.
 //
+#include <stdlib.h>
+
 #include <eat_interface.h>
 #include <eat_periphery.h>
 
@@ -17,8 +19,8 @@ static int vibration_data_i=0;
 #define VIBRATION_TRESHOLD 100000000
 
 static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len);
-static eat_bool vibration_sendAlarm();
-static void vibration_timer_handler();
+static eat_bool vibration_sendAlarm(void);
+static void vibration_timer_handler(void);
 
 float  fangcha(long *array,int len)
 {
@@ -96,46 +98,54 @@ void app_vibration_thread(void *data)
     }
 }
 
-static void vibration_timer_handler()
+static void vibration_timer_handler(void)
 {
-	u8 read_buffer[10]=0;
-	s32 ret;
-	u8 write_buffer[10]=0;
+    u8 read_buffer[10] =
+    { 0 };
+    s32 ret;
+    u8 write_buffer[10] =
+    { 0 };
 //	float x2y2z2_fangcha;
-	long delta;
-	write_buffer[0]=MMA8X5X_OUT_X_MSB;
-	ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0],1,read_buffer,
-							MMA8X5X_BUF_SIZE);
+    long delta;
+    write_buffer[0] = MMA8X5X_OUT_X_MSB;
+    ret = eat_i2c_read(EAT_I2C_OWNER_0, &write_buffer[0], 1, read_buffer,
+    MMA8X5X_BUF_SIZE);
 
-	if(ret!=0)
-	{
+    if (ret != 0)
+    {
 //		eat_trace("i2c test eat_i2c_read 0AH fail :ret=%d",ret);
-	}
-	else
-	{
-		datax[vibration_data_i]  = ((read_buffer[0] << 8) & 0xff00) | read_buffer[1];
-		datay[vibration_data_i]  = ((read_buffer[2] << 8) & 0xff00) | read_buffer[3];
-		dataz[vibration_data_i]  = ((read_buffer[4] << 8) & 0xff00) | read_buffer[5];
-		data_x2y2z2[vibration_data_i] = datax[vibration_data_i]*datax[vibration_data_i]+datay[vibration_data_i]*datay[vibration_data_i]+dataz[vibration_data_i]*dataz[vibration_data_i];
-		delta =abs( data_x2y2z2[vibration_data_i]- 282305280);
+    }
+    else
+    {
+        datax[vibration_data_i] = ((read_buffer[0] << 8) & 0xff00)
+                | read_buffer[1];
+        datay[vibration_data_i] = ((read_buffer[2] << 8) & 0xff00)
+                | read_buffer[3];
+        dataz[vibration_data_i] = ((read_buffer[4] << 8) & 0xff00)
+                | read_buffer[5];
+        data_x2y2z2[vibration_data_i] = datax[vibration_data_i]
+                * datax[vibration_data_i]
+                + datay[vibration_data_i] * datay[vibration_data_i]
+                + dataz[vibration_data_i] * dataz[vibration_data_i];
+        delta = abs(data_x2y2z2[vibration_data_i] - 282305280);
 //		eat_trace("delta=%d, data_x2y2z2[vibration_data_i] = %d",delta, data_x2y2z2[vibration_data_i]);
-		if(delta > VIBRATION_TRESHOLD)
-			vibration_sendAlarm();
-		vibration_data_i++;
-		if(vibration_data_i == 10)
-			vibration_data_i = 0 ;	
+        if (delta > VIBRATION_TRESHOLD)
+            vibration_sendAlarm();
+        vibration_data_i++;
+        if (vibration_data_i == 10)
+            vibration_data_i = 0;
 //		x2y2z2_fangcha = fangcha(data_x2y2z2, 10);
-		
-		
-	}
-	
+
+    }
+
 }
+
 static eat_bool vibration_sendMsg2Main(MSG_THREAD* msg, u8 len)
 {
     return sendMsg(THREAD_VIBRATION, THREAD_MAIN, msg, len);
 }
 
-static eat_bool vibration_sendAlarm()
+static eat_bool vibration_sendAlarm(void)
 {
     u8 msgLen = sizeof(MSG_THREAD) + sizeof(VIBRATE);
     MSG_THREAD* msg = allocMsg(msgLen);

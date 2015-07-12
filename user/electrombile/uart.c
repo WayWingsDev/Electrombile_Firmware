@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <eat_interface.h>
 #include <eat_uart.h>
@@ -14,11 +15,11 @@
 #include "uart.h"
 #include "log.h"
 
-void event_uart_ready_rd(EatEvent_st* event)
+int event_uart_ready_rd(const EatEvent_st* event)
 {
 	u16 length = 0;
 	EatUart_enum uart = event->data.uart.uart;
-	u8 buf[1024] = {0};	//TODO: use macro
+	char buf[1024] = {0};	//TODO: use macro
 
 	length = eat_uart_read(uart, buf, 1024);
 	if (length)
@@ -28,31 +29,31 @@ void event_uart_ready_rd(EatEvent_st* event)
 	}
 	else
 	{
-		return;
+		return 0;
 	}
 
 	if (strstr(buf, "reboot"))
 	{
 		eat_reset_module();
-		return;
+		return 0;
 	}
 
 	if (strstr(buf, "halt"))
 	{
 		eat_power_down();
-		return;
+		return 0;
 	}
 
 	if (strstr(buf, "version"))
 	{
 		LOG_INFO("%s", eat_get_version());
-		return;
+		return 0;
 	}
 
 	if (strstr(buf, "build"))
 	{
 		LOG_INFO("build time = %s, build No. = %s", eat_get_buildtime(), eat_get_buildno());
-		return;
+		return 0;
 	}
 
     if (strstr(buf, "imei"))
@@ -60,7 +61,7 @@ void event_uart_ready_rd(EatEvent_st* event)
         u8 imei[16] = {0};
         eat_get_imei(imei, 15);
         LOG_INFO("IMEI = %s", imei);
-        return;
+        return 0;
     }
 
 
@@ -76,20 +77,22 @@ void event_uart_ready_rd(EatEvent_st* event)
         {
             LOG_ERROR("Get rtc time failed:%d", result);
         }
-        return;
+        return 0;
     }
 
 	//forward AT command to modem
 	if (strstr(buf, "AT"))
 	{
 		eat_modem_write(buf, length);
-		return;
+		return 0;
 	}
+
+	return 0;
 }
 
 void print(const char* fmt, ...)
 {
-    unsigned char buf[1024] = {0};
+    char buf[1024] = {0};
     int length = 0;
 
     va_list arg;

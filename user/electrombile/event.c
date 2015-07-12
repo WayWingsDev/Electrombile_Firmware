@@ -4,6 +4,7 @@
  *  Created on: 2015/6/25
  *      Author: jk
  */
+#include <string.h>
 
 #include <eat_interface.h>
 #include <eat_uart.h>
@@ -32,7 +33,7 @@ typedef struct
  */
 int event_timer(const EatEvent_st* event);
 int event_threadMsg(const EatEvent_st* event);
-void event_mod_ready_rd(EatEvent_st* event);
+int event_mod_ready_rd(const EatEvent_st* event);
 
 static EVENT_PROC msgProcs[] =
 {
@@ -73,7 +74,7 @@ static char* getEventDescription(EatEvent_enum event)
         }
     }
 }
-void event_mod_ready_rd(EatEvent_st* event)
+int event_mod_ready_rd(const EatEvent_st* event)
 {
 	u8 buf[256] = {0};
 	u16 len = 0;
@@ -82,6 +83,11 @@ void event_mod_ready_rd(EatEvent_st* event)
 	len = eat_modem_read(buf, 256);
 	LOG_DEBUG("modem recv: %s", buf);
 
+	if (!len)
+	{
+	    LOG_ERROR("modem receive nothing");
+	    return -1;
+	}
 	buf_ptr = (u8*) strstr((const char *) buf, "+CGATT: 1");
 	if (buf_ptr != NULL)
 	{
@@ -89,6 +95,7 @@ void event_mod_ready_rd(EatEvent_st* event)
 		eat_timer_stop(TIMER_AT_CMD);
 	}
  
+	return 0;
 }
 
 
@@ -156,6 +163,13 @@ int event_threadMsg(const EatEvent_st* event)
         case CMD_THREAD_GPS:
         {
             GPS* gps = (GPS*) msg->data;
+
+            if (msgLen < sizeof(GPS))
+            {
+                LOG_ERROR("msg length error");
+                break;
+            }
+
             if (!gps)
             {
                 break;
@@ -181,5 +195,6 @@ int event_threadMsg(const EatEvent_st* event)
             LOG_ERROR("unknown thread command:%d", msg->cmd);
     }
 
+    return 0;
 }
 

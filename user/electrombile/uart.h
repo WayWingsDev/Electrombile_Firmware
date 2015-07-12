@@ -10,7 +10,7 @@
 
 #include <eat_interface.h>
 
-void event_uart_ready_rd(EatEvent_st* event);
+int event_uart_ready_rd(const EatEvent_st* event);
 
 void print(const char* fmt, ...);
 

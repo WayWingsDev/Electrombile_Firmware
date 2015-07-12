@@ -23,7 +23,7 @@ typedef struct
 	ADDR_TYPE addr_type;
 	union
 	{
-		u8 domain[MAX_DOMAIN_NAME_LEN];
+		s8 domain[MAX_DOMAIN_NAME_LEN];
 		u8 ipaddr[4];
 	}addr;
 	u16 port;
