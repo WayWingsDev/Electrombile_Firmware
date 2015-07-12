@@ -205,9 +205,9 @@ static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
 
 static eat_bool gps_sendGPS(float latitude, float longitude)
 {
-    u8 msgLen = sizeof(MSG_THREAD) + sizeof(GPS);
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(LOCAL_GPS);
     MSG_THREAD* msg = allocMsg(msgLen);
-    GPS* gps = 0;
+    LOCAL_GPS* gps = 0;
 
 
     if (!msg)
@@ -216,11 +216,12 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
         return EAT_FALSE;
     }
     msg->cmd = CMD_THREAD_GPS;
-    msg->length = sizeof(GPS);
+    msg->length = sizeof(LOCAL_GPS);
 
-    gps = (GPS*)msg->data;
-    gps->latitude = latitude;
-    gps->longitude = longitude;
+    gps = (LOCAL_GPS*)msg->data;
+    gps->isGpsFixed = EAT_TRUE;
+    gps->gps.latitude = latitude;
+    gps->gps.longitude = longitude;
 
 
     LOG_DEBUG("send gps: lat(%f), lng(%f)", latitude, longitude);
@@ -229,10 +230,9 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
 
 static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
 {
-    u8 msgLen = sizeof(MSG_THREAD) + sizeof(CGI) + sizeof(CELL) * cellNo;
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(LOCAL_GPS);
     MSG_THREAD* msg = allocMsg(msgLen);
-    CGI* cgi = 0;
-    CELL* cell = 0;
+    LOCAL_GPS* gps = 0;
 
     int i = 0;
 
@@ -242,20 +242,22 @@ static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
         return EAT_FALSE;
     }
     msg->cmd = CMD_THREAD_GPS;
-    msg->length = sizeof(CGI) + sizeof(CELL) * cellNo;
+    msg->length = sizeof(LOCAL_GPS);
 
-    cgi = (CGI*)msg->data;
-    cgi->mcc = mcc;
-    cgi->mnc = mnc;
-    cgi->cellNo = cellNo;
+    gps = (LOCAL_GPS*)msg->data;
+    gps->isGpsFixed = EAT_FALSE;
 
-    cell = cgi->cell;
+    gps->cellInfo.mcc = mcc;
+    gps->cellInfo.mnc = mnc;
+
+    gps->cellInfo.cellNo = cellNo;
     for (i = 0; i < cellNo; i++)
     {
-        cell[i].lac = cells[i].lac;
-        cell[i].cellid = cells[i].cellid;
-        cell[i].rxl = cells[i].rxl;
+        gps->cellInfo.cell[i].lac = cells[i].lac;
+        gps->cellInfo.cell[i].cellid = cells[i].cellid;
+        gps->cellInfo.cell[i].rxl = cells[i].rxl;
     }
+    LOG_DEBUG("send gps: mcc(%d), mnc(%d), cellNo(%d)", mcc, mnc, cellNo);
 
     return gps_sendMsg2Main(msg, msgLen);
 }

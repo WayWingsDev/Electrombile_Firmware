@@ -7,6 +7,10 @@
 
 #include <eat_type.h>
 #include <eat_interface.h>
+
+#include "protocol.h"
+
+
 enum CMD
 {
     CMD_THREAD_GPS,
@@ -22,6 +26,27 @@ typedef struct
     u8 length;
     u8 data[];
 }MSG_THREAD;
+
+#define MAX_CELL_NUM 7
+
+typedef struct
+{
+    short mcc;  //mobile country code
+    short mnc;  //mobile network code
+    char  cellNo;// cell count
+    CELL cell[MAX_CELL_NUM];
+}CELL_INFO;       //Cell Global Identifier
+
+#pragma anon_unions
+typedef struct
+{
+    eat_bool isGpsFixed;    //TURE: 发送的是GPS信息，FALSE：发送的是基站信息
+    union
+    {
+        GPS gps;
+        CELL_INFO cellInfo;
+    };
+}LOCAL_GPS;
 
 typedef struct
 {
