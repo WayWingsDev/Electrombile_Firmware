@@ -122,8 +122,8 @@ extern eat_bool (*const eat_gps_start_mode_set)(EatGpsRstMode mode);
 *                                 GPS_NMEA_OUTPUT_GPGSA =1<<3, bit 3=1, enable NMEA $GPGSA data output
 *                                 GPS_NMEA_OUTPUT_GPGSV =1<<4, bit 4=1, enable NMEA $GPGSV data output
 *                                 GPS_NMEA_OUTPUT_GPRMC =1<<5, bit 5=1, enable NMEA $GPRMC data output
-*                                 GPS_NMEA_OUTPUT_GPVTG =1<<6, /*bit 6=1, enable NMEA $GPVTG data output
-*                                 GPS_NMEA_OUTPUT_GPZDA =1<<7, /*bit 7=1, enable NMEA $GPZDA data output
+*                                 GPS_NMEA_OUTPUT_GPVTG =1<<6, bit 6=1, enable NMEA $GPVTG data output
+*                                 GPS_NMEA_OUTPUT_GPZDA =1<<7, bit 7=1, enable NMEA $GPZDA data output
 *                     infobuf - NMEA info buff
 *                     size - buff size (>=512)
 * Returns     :    EAT_TRUE     set success
