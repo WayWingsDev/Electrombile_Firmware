@@ -27,7 +27,6 @@ typedef struct
     u8 data[];
 }MSG_THREAD;
 
-#define MAX_CELL_NUM 7
 
 typedef struct
 {

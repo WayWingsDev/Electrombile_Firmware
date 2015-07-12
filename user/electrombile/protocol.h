@@ -10,6 +10,7 @@
 
 #define START_FLAG (0xAA55)
 #define IMEI_LENGTH 15
+#define MAX_CELL_NUM 7
 
 enum
 {
@@ -47,7 +48,7 @@ typedef struct
     short mcc;  //mobile country code
     short mnc;  //mobile network code
     char  cellNo;// cell count
-    CELL cell[];
+//    CELL cell[];
 }__attribute__((__packed__)) CGI;       //Cell Global Identifier
 
 

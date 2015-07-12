@@ -131,20 +131,43 @@ int client_proc(const void* m, int msgLen)
 
 void client_loop(void)
 {
+    int i = 0;  //loop iterator
     if (socket_conneted())
     {
         if (client_logined())
         {
-            MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
-
-            if (!msg)
+            if (data.isGpsFixed)
             {
-                LOG_ERROR("alloc message failed");
-            }
+                MSG_GPS* msg = alloc_msg(CMD_GPS, sizeof(MSG_GPS));
 
-            msg->gps = data.gps;
-            socket_sendData(msg, sizeof(MSG_GPS));
-            LOG_DEBUG("send GPS message");
+                if (!msg)
+                {
+                    LOG_ERROR("alloc message failed");
+                }
+
+                msg->gps = data.gps;
+                socket_sendData(msg, sizeof(MSG_GPS));
+                LOG_DEBUG("send GPS message");
+            }
+            else
+            {
+                size_t msgLen = sizeof(MSG_HEADER) + sizeof(CGI) + sizeof(CELL) * data.cellNum;
+                MSG_HEADER* msg = alloc_msg(CMD_CELL, msgLen);
+                CGI* cgi = (CGI*) msg + 1;
+                CELL* cell = (CELL*)cgi + 1;
+                if (!msg)
+                {
+                    LOG_ERROR("alloc message failed");
+                }
+
+                memcpy(cgi, &(data.cgi), sizeof(CGI));
+                for (i = 0; i < data.cellNum; i++)
+                {
+                    memcpy(cell + i, data.cells + i, sizeof(CELL));
+                }
+                socket_sendData(msg, msgLen);
+                LOG_DEBUG("send CELL message");
+            }
         }
         else
         {

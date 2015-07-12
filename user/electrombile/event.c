@@ -157,14 +157,15 @@ int event_threadMsg(const EatEvent_st* event)
 {
     MSG_THREAD* msg = (MSG_THREAD*) event->data.user_msg.data_p;
     u8 msgLen = event->data.user_msg.len;
+    int i = 0;
 
     switch (msg->cmd)
     {
         case CMD_THREAD_GPS:
         {
-            GPS* gps = (GPS*) msg->data;
+            LOCAL_GPS* gps = (LOCAL_GPS*) msg->data;
 
-            if (msgLen < sizeof(GPS))
+            if (msgLen < sizeof(LOCAL_GPS))
             {
                 LOG_ERROR("msg length error");
                 break;
@@ -174,12 +175,23 @@ int event_threadMsg(const EatEvent_st* event)
             {
                 break;
             }
-            LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->latitude, gps->longitude);
+            LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->gps.latitude, gps->gps.longitude);
 
-            //update the local GPS data
-            data.gps = *gps;
+            data.isGpsFixed = gps->isGpsFixed;
 
-            freeMsg(msg);
+            if (gps->isGpsFixed)    //update the local GPS data
+            {
+                data.gps.latitude = gps->gps.latitude;
+                data.gps.longitude = gps->gps.longitude;
+            }
+            else    //update local cell info
+            {
+                data.cgi.mcc = gps->cellInfo.mcc;
+                data.cgi.mnc = gps->cellInfo.mnc;
+                data.cellNum = gps->cellInfo.cellNo;
+                memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
+            }
+
 
             break;
         }
@@ -194,6 +206,8 @@ int event_threadMsg(const EatEvent_st* event)
         default:
             LOG_ERROR("unknown thread command:%d", msg->cmd);
     }
+
+    freeMsg(msg);
 
     return 0;
 }

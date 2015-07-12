@@ -17,7 +17,11 @@ typedef struct
     eat_bool connected;     //is the socket connected to server
     eat_bool logined;       //is the client logined to server
 
+    eat_bool isGpsFixed;
     GPS gps;
+    CGI cgi;
+    char cellNum;
+    CELL cells[MAX_CELL_NUM];
 }LOCAL_DATA;
 
 extern LOCAL_DATA data;
