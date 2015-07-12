@@ -25,6 +25,7 @@ static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
 static void gps_timer_handler();
 static eat_bool gps_sendGPS(float latitude, float longitude);
+static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[]);
 static eat_bool gps_getGps(float* latitude, float* longitude);
 static eat_bool gps_getCells();
 static void geo_fence_proc_cb(char *msg_buf, u8 len);
@@ -73,7 +74,8 @@ static void gps_timer_handler()
 {
     float latitude = 0.0;
     float longitude = 0.0;
-    char isGpsFixed = 0;
+    eat_bool isGpsFixed = EAT_FALSE;
+    eat_bool isCellGet = EAT_FALSE;
 
     isGpsFixed = gps_getGps(&latitude, &longitude);
 
@@ -85,7 +87,16 @@ static void gps_timer_handler()
     }
     else
     {
-        gps_getCells();
+        short mcc = 0;  //mobile country code
+        short mnc = 0;  //mobile network code
+        char  cellNo;// cell count
+        CELL cells[7] = {0};
+
+        isCellGet = gps_getCells(&mcc, &mnc, &cellNo, cells);
+        if (isCellGet)
+        {
+            gps_sendCell(mcc, mnc, cellNo, cells);
+        }
     }
 
 //    gps_sendGPS(gps);
@@ -93,7 +104,7 @@ static void gps_timer_handler()
 
 static eat_bool gps_getGps(float* latitude, float* longitude)
 {
-    char isGpsFixed = 0;
+    eat_bool isGpsFixed = 0;
 
     /*
      * NMEA output format:
@@ -108,15 +119,27 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
     return isGpsFixed;
 }
 
-static eat_bool gps_getCells()
+static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 {
-    u8 buf[256] = {0};
-    u16 len = 0;
+    u8 buf[256] = {0};  //用于读取AT指令的响应
+    u16 len = 0;        //AT指令回应报文长度
+
+    int _mcc = 460;
+    int _mnc = 0;
+    int lac = 0;
+    int cellid = 0;
+    int rxl = 0;
+
+    u8 cellCount = 0;
+
+    unsigned char* p = buf;
+
+    int n = 0;  //sscanf返回的参数个数
 
     /*
      * the output format of AT+CENG?
      * +CENG:<mode>,<Ncell>
-     * +CENG:<cell>,"<arfcn>,<rxl>,<rxq>,<mcc>,<mnc>,<bsic>,<cellid>,<rla>,<txp>,<lac>,<TA>"
+     * +CENG:<cell>,"<mcc>,<mnc>,<lac>,<cellid>,<bsic>,<rxl>"
      * +CENG:<cell>,...
      *
      * eg:
@@ -138,7 +161,41 @@ static eat_bool gps_getCells()
         LOG_DEBUG("AT+CENG? return %s", buf);
     }
 
-    return;
+    do
+    {
+        p = strchr(p + 1, '+');
+        if (p)
+        {
+            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%d,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);
+            if (n != 5)
+            {
+                break;
+            }
+
+            if (*mcc == 0)
+            {
+                *mcc =_mcc;
+                *mnc = _mnc;
+            }
+            cells[cellCount].lac = lac;
+            cells[cellCount].cellid = cellid;
+            cells[cellCount].rxl = rxl;
+
+            cellCount++;
+        }
+
+    } while (p);
+
+
+    if (cellCount)
+    {
+        *cellNo = cellCount;
+        return EAT_TRUE;
+    }
+    else
+    {
+        return EAT_FALSE;
+    }
 }
 
 static eat_bool gps_sendMsg2Main(MSG_THREAD* msg, u8 len)
@@ -168,6 +225,39 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
     gps_sendMsg2Main(msg, msgLen);
     
     LOG_DEBUG("send gps: lat(%f), lng(%f)", latitude, longitude);
+    return gps_sendMsg2Main(msg, msgLen);
+}
+
+static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[])
+{
+    u8 msgLen = sizeof(MSG_THREAD) + sizeof(CGI) + sizeof(CELL) * cellNo;
+    MSG_THREAD* msg = allocMsg(msgLen);
+    CGI* cgi = 0;
+    CELL* cell = 0;
+
+    int i = 0;
+
+    if (!msg)
+    {
+        LOG_ERROR("alloc msg failed");
+        return EAT_FALSE;
+    }
+    msg->cmd = CMD_THREAD_GPS;
+    msg->length = sizeof(CGI) + sizeof(CELL) * cellNo;
+
+    cgi = (CGI*)msg->data;
+    cgi->mcc = mcc;
+    cgi->mnc = mnc;
+    cgi->cellNo = cellNo;
+
+    cell = cgi->cell;
+    for (i = 0; i < cellNo; i++)
+    {
+        cell[i].lac = cells[i].lac;
+        cell[i].cellid = cells[i].cellid;
+        cell[i].rxl = cells[i].rxl;
+    }
+
     return gps_sendMsg2Main(msg, msgLen);
 }
 
