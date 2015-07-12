@@ -222,8 +222,7 @@ static eat_bool gps_sendGPS(float latitude, float longitude)
     gps->latitude = latitude;
     gps->longitude = longitude;
 
-    gps_sendMsg2Main(msg, msgLen);
-    
+
     LOG_DEBUG("send gps: lat(%f), lng(%f)", latitude, longitude);
     return gps_sendMsg2Main(msg, msgLen);
 }
