@@ -23,11 +23,11 @@
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
 
-static void gps_timer_handler();
+static void gps_timer_handler(void);
 static eat_bool gps_sendGPS(float latitude, float longitude);
 static eat_bool gps_sendCell(short mcc, short mnc, char cellNo, CELL cells[]);
 static eat_bool gps_getGps(float* latitude, float* longitude);
-static eat_bool gps_getCells();
+static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[]);
 static void geo_fence_proc_cb(char *msg_buf, u8 len);
 
 void app_gps_thread(void *data)
@@ -70,7 +70,7 @@ void app_gps_thread(void *data)
     }
 }
 
-static void gps_timer_handler()
+static void gps_timer_handler(void)
 {
     float latitude = 0.0;
     float longitude = 0.0;
@@ -104,7 +104,8 @@ static void gps_timer_handler()
 
 static eat_bool gps_getGps(float* latitude, float* longitude)
 {
-    eat_bool isGpsFixed = 0;
+    eat_bool isGpsFixed = EAT_FALSE;
+    int n = 0;
 
     /*
      * NMEA output format:
@@ -114,14 +115,18 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
     eat_gps_nmea_info_output(EAT_NMEA_OUTPUT_GPGGA, gps_info_buf,NMEA_BUFF_SIZE);
     LOG_DEBUG("EAT_NMEA_OUTPUT_SIMCOM:%s", gps_info_buf);
 
-    sscanf(gps_info_buf + sizeof("$GPGGA"), "%*f,%f,%*c,%f,%*c,%d", latitude, longitude, &isGpsFixed);
+    n = sscanf(gps_info_buf + sizeof("$GPGGA"), "%*f,%f,%*c,%f,%*c,%d", latitude, longitude, &isGpsFixed);
+    if (n != 3)
+    {
+        LOG_ERROR("Parse gps info failed");
+    }
 
     return isGpsFixed;
 }
 
 static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 {
-    u8 buf[256] = {0};  //用于读取AT指令的响应
+    s8 buf[256] = {0};  //用于读取AT指令的响应
     u16 len = 0;        //AT指令回应报文长度
 
     int _mcc = 460;
@@ -132,7 +137,7 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 
     u8 cellCount = 0;
 
-    unsigned char* p = buf;
+    char* p = buf;
 
     int n = 0;  //sscanf返回的参数个数
 
