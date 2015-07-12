@@ -32,13 +32,13 @@ $(LIB_RESULE):$(OBJECT)
 	$(AR) $(ARFLAGS) $(LIB_DIR)/$@ $(addprefix $(LIB_DIR)/,$(notdir $(OBJECT)))
 
 $(COBJECT):%.o:%.c
-	$(CC) -c $(CFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$(notdir $@) $< 1>&2 2>$(LOG_DIR)/output.log
+	$(CC) -c $(CFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$(notdir $@) $< 1>&2 2>>$(LOG_DIR)/output.log
 	
 $(ASMOBJECT):%.o:%.s
-	$(ASM) -c $(ASMFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$(notdir $@) $< 1>&2 2>$(LOG_DIR)/output.log
+	$(ASM) -c $(ASMFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$(notdir $@) $< 1>&2 2>>$(LOG_DIR)/output.log
 
 $(MAIN_OBJ):$(MAIN_SRC)
-	$(CC) -c $(CFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$@ $< 1>&2 2>$(LOG_DIR)/output.log
+	$(CC) -c $(CFLAGS) $(LOCAL_INCLUDE) -o $(LIB_DIR)/$@ $< 1>&2 2>>$(LOG_DIR)/output.log
 
 .PHONY:
    clean:
