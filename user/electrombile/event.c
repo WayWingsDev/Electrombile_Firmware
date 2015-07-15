@@ -175,14 +175,15 @@ int event_threadMsg(const EatEvent_st* event)
             {
                 break;
             }
-            LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->gps.latitude, gps->gps.longitude);
-
+            
             data.isGpsFixed = gps->isGpsFixed;
 
             if (gps->isGpsFixed)    //update the local GPS data
             {
                 data.gps.latitude = gps->gps.latitude;
                 data.gps.longitude = gps->gps.longitude;
+                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: lat(%f), lng(%f)", gps->gps.latitude, gps->gps.longitude);
+
             }
             else    //update local cell info
             {
@@ -190,6 +191,8 @@ int event_threadMsg(const EatEvent_st* event)
                 data.cgi.mnc = gps->cellInfo.mnc;
                 data.cellNum = gps->cellInfo.cellNo;
                 memcpy(data.cells, gps->cellInfo.cell, sizeof(CELL) * gps->cellInfo.cellNo);
+                LOG_DEBUG("receive thread command CMD_GPS_UPDATE: cellid(%x), lac(%d)", data.cells[0].cellid, data.cells[0].lac);
+
             }
 
 

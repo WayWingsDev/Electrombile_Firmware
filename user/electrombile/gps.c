@@ -10,7 +10,7 @@
 
 #include <eat_interface.h>
 #include <eat_gps.h>
-
+#include <eat_modem.h>
 
 #include "gps.h"
 #include "timer.h"
@@ -22,6 +22,11 @@
 
 #define NMEA_BUFF_SIZE 1024
 static char gps_info_buf[NMEA_BUFF_SIZE]="";
+static short mcc = 0;  //mobile country code
+static short mnc = 0;  //mobile network code
+static char  cellNo;// cell count
+static CELL cells[7] = {0};
+static   eat_bool isCellGet = EAT_FALSE;
 
 static void gps_timer_handler(void);
 static eat_bool gps_sendGPS(float latitude, float longitude);
@@ -33,8 +38,8 @@ static void geo_fence_proc_cb(char *msg_buf, u8 len);
 void app_gps_thread(void *data)
 {
     EatEvent_st event;
-
     eat_gps_power_req(EAT_TRUE);
+    
 
     LOG_INFO("gps current sleep mode %d", eat_gps_sleep_read());
 
@@ -62,6 +67,11 @@ void app_gps_thread(void *data)
                         break;
                 }
                 break;
+             case EAT_EVENT_MDM_READY_RD:
+             {       
+                   isCellGet = gps_getCells(&mcc, &mnc, &cellNo, cells);   
+                   break;
+             }
             default:
             	LOG_ERROR("event(%d) not processed", event.event);
                 break;
@@ -75,7 +85,7 @@ static void gps_timer_handler(void)
     float latitude = 0.0;
     float longitude = 0.0;
     eat_bool isGpsFixed = EAT_FALSE;
-    eat_bool isCellGet = EAT_FALSE;
+
 
     isGpsFixed = gps_getGps(&latitude, &longitude);
 
@@ -87,15 +97,14 @@ static void gps_timer_handler(void)
     }
     else
     {
-        short mcc = 0;  //mobile country code
-        short mnc = 0;  //mobile network code
-        char  cellNo;// cell count
-        CELL cells[7] = {0};
 
-        isCellGet = gps_getCells(&mcc, &mnc, &cellNo, cells);
+        int len;
+        len = eat_modem_write("AT+CENG?\r\n", 10);
+        LOG_DEBUG("write at+ceng? len=%d",len);
         if (isCellGet)
         {
             gps_sendCell(mcc, mnc, cellNo, cells);
+            isCellGet = EAT_FALSE;
         }
     }
 
@@ -126,7 +135,7 @@ static eat_bool gps_getGps(float* latitude, float* longitude)
 
 static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
 {
-    s8 buf[256] = {0};  //用于读取AT指令的响应
+    char buf[2048] = {0};  //用于读取AT指令的响应
     u16 len = 0;        //AT指令回应报文长度
 
     int _mcc = 460;
@@ -159,22 +168,17 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
      * +CENG: 6,",,0000,0000,00,00"
      *
      */
-    eat_modem_write("AT+CENG?\r", 9);
-    len = eat_modem_read(buf, 256);
-    if (len > 0)
-    {
-        LOG_DEBUG("AT+CENG? return %s", buf);
-    }
-
+    len = eat_modem_read(buf, 1024);
+    LOG_DEBUG("modem read len=%d",len);
     do
     {
         p = strchr(p + 1, '+');
         if (p)
         {
-            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%d,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);
+            n = sscanf(p + sizeof("+CENG: 0,"), "%d,%d,%d,%x,%*d,%d", &_mcc, &_mnc, &lac, &cellid, &rxl);            
             if (n != 5)
-            {
-                break;
+            {                
+                continue;
             }
 
             if (*mcc == 0)
