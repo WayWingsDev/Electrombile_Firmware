@@ -187,7 +187,7 @@ static eat_bool gps_getCells(short* mcc, short* mnc, char* cellNo, CELL cells[])
                 *mnc = _mnc;
             }
             cells[cellCount].lac = lac;
-            cells[cellCount].cellid = cellid;
+            cells[cellCount].cellid = cellid&0xffff;
             cells[cellCount].rxl = rxl;
 
             cellCount++;

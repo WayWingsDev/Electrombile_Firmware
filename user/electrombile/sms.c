@@ -5,6 +5,13 @@
  *      Author: jk
  */
 
+ /*
+    server,set,1,www.sky200.com,32001
+    server,get
+
+
+ */
+
 #include "sms.h"
 #include "log.h"
 #include "thread.h"
@@ -14,6 +21,10 @@
 #include "eat_interface.h"
 #include "eat_uart.h"
 #include "eat_sms.h"
+#include "setting.h"
+#include <stdlib.h>  //strtok()必须加载这个头函数
+
+static EatSmsReadCnf_st sms_message;
 
 static void eat_check_sms_pdu_string(u16 length, u8 *bytes, u8 *str)
 {
@@ -40,7 +51,6 @@ static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
     u8 format =0;
 
     eat_get_sms_format(&format);
-    eat_trace("eat_sms_flash_message_cb, format=%d",format);
     if(1 == format)//TEXT模式
     {
         eat_trace("eat_sms_read_cb, msg=%s",smsFlashMessage.data);
@@ -61,24 +71,74 @@ static eat_sms_flash_message_cb(EatSmsReadCnf_st smsFlashMessage)
 static void eat_sms_read_cb(EatSmsReadCnf_st  smsReadCnfContent)
 {
     u8 format =0;
-
+    char *p = smsReadCnfContent.data;
+    char ack_message[64]={0};
+    char*  ptr;
+    u8 n=0;
+    u8 type;
+    char *buf[5] = NULL;
+    u16 port;
     eat_get_sms_format(&format);
-    eat_trace("eat_sms_read_cb, format=%d",format);
     if(1 == format)//TEXT模式
     {
-        eat_trace("eat_sms_read_cb, msg=%s",smsReadCnfContent.data);
-        eat_trace("eat_sms_read_cb, datetime=%s",smsReadCnfContent.datetime);
-        eat_trace("eat_sms_read_cb, name=%s",smsReadCnfContent.name);
-        eat_trace("eat_sms_read_cb, status=%d",smsReadCnfContent.status);
-        eat_trace("eat_sms_read_cb, len=%d",smsReadCnfContent.len);
-        eat_trace("eat_sms_read_cb, number=%s",smsReadCnfContent.number);
+        memcpy(&sms_message,&smsReadCnfContent,sizeof(smsReadCnfContent));
+        ptr=strstr(p,"server");
+        if(ptr)
+        {
+            ptr = strstr(p,"get");
+            if(ptr)
+            {
+                if (setting.addr_type == ADDR_TYPE_IP)
+                {
+                    sprintf(ack_message,"server,%d.%d.%d.%d,%d",setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+                }
+                else
+                {
+                    sprintf(ack_message,"server,%s,%d",setting.addr.domain,setting.port);
+                }
+                eat_send_text_sms(smsReadCnfContent.number,ack_message);
+            }
+            ptr = strstr(p,"set");
+            if(ptr)
+            {
+                
+                LOG_DEBUG("%s",p);
+                buf[n] = strtok(p,",");
+                for(n=1;n<5;n++)
+                {
+                    buf[n] = strtok(NULL,",");
+                    LOG_DEBUG("%s",buf[n]);
+                    if(NULL==buf[n])
+                    {
+                        return;
+                    }
+                }
+                LOG_DEBUG("buf=%s%s",buf[3],buf[4]);
+                type = atoi(buf[2]);
+                port = atoi(buf[4]);
+                LOG_DEBUG("port=%d",port);
+                if(type==1)
+                {
+                    setting.addr_type = ADDR_TYPE_DOMAIN;
+                    setting.port = port;//domain不全
+                    memcpy(setting.addr.domain,buf[3],sizeof(buf[3]));
+                    LOG_DEBUG("setting.addr.type=%d,domain=%s,port=%d",setting.addr_type,setting.addr.domain,setting.port);
+                }
+                else
+                {
+                    setting.addr_type = ADDR_TYPE_IP;
+                    setting.port = port;//.不能用
+                    sscanf(buf[3],"%d.%d.%d.%d",&setting.addr.ipaddr[0],&setting.addr.ipaddr[1],&setting.addr.ipaddr[2],&setting.addr.ipaddr[3]);
+                    LOG_DEBUG("setting.addr.type=%d,%d:%d:%d:%d,port=%d",setting.addr_type,setting.addr.ipaddr[0],setting.addr.ipaddr[1],setting.addr.ipaddr[2],setting.addr.ipaddr[3],setting.port);
+                }
+                 eat_send_text_sms(smsReadCnfContent.number,"set server ok");
+            }
+                
+        }        
     }
     else//PDU模式
     {
-        eat_trace("eat_sms_read_cb, msg=%s",smsReadCnfContent.data);
-        eat_trace("eat_sms_read_cb, name=%s",smsReadCnfContent.name);
-        eat_trace("eat_sms_read_cb, status=%d",smsReadCnfContent.status);
-        eat_trace("eat_sms_read_cb, len=%d",smsReadCnfContent.len);
+        LOG_INFO("recv pdu sms");
     }
 }
 
@@ -94,7 +154,7 @@ static void eat_sms_send_cb(eat_bool result)
 
 static eat_sms_new_message_cb(EatSmsNewMessageInd_st smsNewMessage)
 {
-    eat_trace("eat_sms_new_message_cb, storage=%d,index=%d",smsNewMessage.storage,smsNewMessage.index);
+     eat_read_sms(smsNewMessage.index,eat_sms_read_cb);
 }
 
 static void eat_sms_ready_cb(eat_bool result)
