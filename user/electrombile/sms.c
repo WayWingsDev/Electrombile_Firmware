@@ -130,6 +130,11 @@ static void recv_server_proc(EatSmsReadCnf_st  smsReadCnfContent)
              if(!setting_save())
                 return;
              eat_send_text_sms(smsReadCnfContent.number,"set server ok");
+             /*************************************************************
+                    加重连todo
+
+             **************************************************************/
+             
              
         }
                 
@@ -145,6 +150,7 @@ static void eat_sms_read_cb(EatSmsReadCnf_st  smsReadCnfContent)
         if(ptr=strstr(p,"server"))//服务器命令
         {
             recv_server_proc(smsReadCnfContent);
+            
         }
         if(ptr=strstr(p,"timer"))
         {
